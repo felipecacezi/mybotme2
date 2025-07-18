@@ -12,6 +12,12 @@ Ele otimiza a comunicação, responde clientes 24/7, qualifica leads e reduz cus
 
 **O atendimento é personalizável?**
 Sim, você pode adaptar o tom de voz, as respostas e todo o fluxo de conversa para se alinhar perfeitamente com a identidade da sua marca.
+
+**Quais são os principais benefícios de usar o MyBotMe?**
+Os principais benefícios incluem atendimento 24/7, respostas instantâneas, redução de custos com atendimento, fácil integração e personalização total para refletir a identidade da sua marca.
+
+**O MyBotMe se integra com outros sistemas?**
+Sim, oferecemos integrações com as principais ferramentas de CRM e outras plataformas para otimizar ainda mais seus processos de vendas e atendimento.
 `;
 
 export default function FaqSection() {
