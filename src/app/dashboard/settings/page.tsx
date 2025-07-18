@@ -51,7 +51,7 @@ export default function SettingsPage() {
   const aiForm = useForm<z.infer<typeof aiSettingsFormSchema>>({
     resolver: zodResolver(aiSettingsFormSchema),
     defaultValues: {
-      provider: "mybotme",
+      provider: "disabled",
       apiKey: "",
     },
   });
