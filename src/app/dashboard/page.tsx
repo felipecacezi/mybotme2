@@ -8,18 +8,6 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Bem-vindo ao seu Dashboard!</CardTitle>
-          <CardDescription>
-            Aqui você pode gerenciar seus bots, visualizar relatórios e muito mais.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Este é um protótipo inicial. Novas funcionalidades serão adicionadas em breve!</p>
-        </CardContent>
-      </Card>
-      
-      <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
                 <CardTitle>Seu Plano Atual</CardTitle>
@@ -39,7 +27,6 @@ export default function DashboardPage() {
             </Button>
         </div>
       </Card>
-
     </div>
   );
 }
