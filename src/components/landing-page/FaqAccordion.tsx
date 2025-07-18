@@ -20,20 +20,21 @@ export default function FaqAccordion({ faqContent }: FaqAccordionProps) {
   const parseFaq = (content: string): FaqItem[] => {
     if (!content) return [];
     
-    return content
-      .split('**')
-      .filter(Boolean)
-      .reduce<FaqItem[]>((acc, item, index) => {
-        if (index % 2 === 0) {
-          const [question, ...answerParts] = item.split('?');
-          const answer = answerParts.join('?').trim();
-          acc.push({ question: `${question}?`, answer });
-        }
-        return acc;
-      }, []);
+    const items = content.trim().split(/\n\s*\n/);
+    
+    return items.map(item => {
+      const parts = item.split('**');
+      const question = (parts[1] || '').trim();
+      const answer = (parts[2] || '').trim();
+      return { question, answer };
+    }).filter(faq => faq.question && faq.answer);
   };
 
   const faqs = parseFaq(faqContent);
+
+  if (faqs.length === 0) {
+    return <p>Nenhuma pergunta frequente para exibir no momento.</p>;
+  }
 
   return (
     <Accordion type="single" collapsible className="w-full">

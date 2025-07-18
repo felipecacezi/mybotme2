@@ -2,22 +2,28 @@ import FaqAccordion from './FaqAccordion';
 
 const staticFaqContent = `
 **O que é o MyBotMe?**
-MyBotMe é uma plataforma de chatbot com inteligência artificial projetada para automatizar o atendimento ao cliente via WhatsApp. Ela atua como uma secretária virtual para o seu negócio.
+**MyBotMe é uma plataforma de chatbot com inteligência artificial projetada para automatizar o atendimento ao cliente via WhatsApp. Ela atua como uma secretária virtual para o seu negócio.**
 
 **Preciso de conhecimento técnico para configurar?**
-Não! A integração é simples e projetada para ser feita em poucos cliques, sem necessidade de conhecimento técnico.
+**Não! A integração é simples e projetada para ser feita em poucos cliques, sem necessidade de conhecimento técnico.**
 
 **Como o MyBotMe pode ajudar meu negócio?**
-Ele otimiza a comunicação, responde clientes 24/7, qualifica leads e reduz custos operacionais, permitindo que você foque no crescimento da sua empresa.
+**Ele otimiza a comunicação, responde clientes 24/7, qualifica leads e reduz custos operacionais, permitindo que você foque no crescimento da sua empresa.**
 
 **O atendimento é personalizável?**
-Sim, você pode adaptar o tom de voz, as respostas e todo o fluxo de conversa para se alinhar perfeitamente com a identidade da sua marca.
+**Sim, você pode adaptar o tom de voz, as respostas e todo o fluxo de conversa para se alinhar perfeitamente com a identidade da sua marca.**
 
 **Quais são os principais benefícios de usar o MyBotMe?**
-Os principais benefícios incluem atendimento 24/7, respostas instantâneas, redução de custos com atendimento, fácil integração e personalização total para refletir a identidade da sua marca.
+**Os principais benefícios incluem atendimento 24/7, respostas instantâneas, redução de custos com atendimento, fácil integração e personalização total para refletir a identidade da sua marca.**
 
 **O MyBotMe se integra com outros sistemas?**
-Sim, oferecemos integrações com as principais ferramentas de CRM e outras plataformas para otimizar ainda mais seus processos de vendas e atendimento.
+**Sim, oferecemos integrações com as principais ferramentas de CRM e outras plataformas para otimizar ainda mais seus processos de vendas e atendimento.**
+
+**Existe um período de teste gratuito?**
+**Sim! Oferecemos um período de teste para você experimentar todas as funcionalidades do MyBotMe sem compromisso e ver na prática como ele pode transformar seu atendimento.**
+
+**Como funciona o suporte ao cliente?**
+**Nossa equipe de suporte está sempre disponível para ajudar com qualquer dúvida ou problema. Oferecemos suporte por e-mail, chat e telefone para garantir que você tenha a melhor experiência possível.**
 `;
 
 export default function FaqSection() {
