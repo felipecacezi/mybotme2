@@ -31,7 +31,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/reports', label: 'Relatórios', icon: LineChart },
-  { href: '/dashboard/profile', label: 'Perfil', icon: User },
   { href: '/dashboard/settings', label: 'Configurações', icon: Settings },
 ];
 
@@ -43,7 +42,8 @@ export default function DashboardLayout({
   const pathname = usePathname();
 
   const getPageTitle = () => {
-    const currentItem = menuItems.find(item => pathname.startsWith(item.href));
+    const currentItem = menuItems.find(item => item.href === pathname || (item.href !== '/dashboard' && pathname.startsWith(item.href)));
+    if (pathname.startsWith('/dashboard/profile')) return 'Perfil';
     return currentItem?.label || 'Dashboard';
   };
 
