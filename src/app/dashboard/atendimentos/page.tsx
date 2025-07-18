@@ -49,17 +49,14 @@ type Task = {
 // --- MOCK DATA ---
 const initialColumns: Column[] = [
   { id: 'awaiting', title: 'Aguardando Atendimento' },
-  { id: 'in-progress', title: 'Em Atendimento' },
-  { id: 'scheduled', title: 'Agendado' },
-  { id: 'finished', title: 'Finalizado' },
 ];
 
 const initialTasks: Task[] = [
   { id: 1, columnId: 'awaiting', name: 'Maria Silva', lastMessage: 'Olá! Gostaria de saber mais sobre o plano Pro.', time: '10:45', avatar: "https://github.com/shadcn.png", tags: ["Lead"] },
   { id: 2, columnId: 'awaiting', name: '+55 11 98765-4321', lastMessage: 'Preciso de ajuda com a minha fatura.', time: 'Ontem', tags: ["Suporte", "Urgente"] },
-  { id: 3, columnId: 'in-progress', name: 'João Pereira', lastMessage: 'Qual o valor da integração?', time: '09:30', avatar: "https://github.com/vercel.png" },
-  { id: 4, columnId: 'scheduled', name: 'Ana Costa', lastMessage: 'Agendamento confirmado para 15/07 às 14h.', time: 'Ontem', avatar: "https://github.com/radix-ui.png", tags: ["Cliente"] },
-  { id: 5, columnId: 'finished', name: 'Carlos Souza', lastMessage: 'Perfeito, vou finalizar a compra.', time: '2 dias atrás', avatar: "https://github.com/nextjs.png" },
+  { id: 3, columnId: 'awaiting', name: 'João Pereira', lastMessage: 'Qual o valor da integração?', time: '09:30', avatar: "https://github.com/vercel.png" },
+  { id: 4, columnId: 'awaiting', name: 'Ana Costa', lastMessage: 'Agendamento confirmado para 15/07 às 14h.', time: 'Ontem', avatar: "https://github.com/radix-ui.png", tags: ["Cliente"] },
+  { id: 5, columnId: 'awaiting', name: 'Carlos Souza', lastMessage: 'Perfeito, vou finalizar a compra.', time: '2 dias atrás', avatar: "https://github.com/nextjs.png" },
   { id: 6, columnId: 'awaiting', name: 'Fernanda Lima', lastMessage: 'O bot de vocês é incrível!', time: '11:20', avatar: "https://github.com/nextjs.png" },
 ];
 
@@ -233,8 +230,8 @@ export default function AtendimentosPage() {
     
     function createNewColumn() {
         const columnToAdd: Column = {
-            id: `col-${columns.length + 1}`,
-            title: `Nova Coluna ${columns.length - 3}`
+            id: `col-${Date.now()}`,
+            title: `Nova Coluna`
         };
 
         setColumns([...columns, columnToAdd]);
