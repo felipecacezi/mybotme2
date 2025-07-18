@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getWhatsappConnectionStatus, generateWhatsappQrCode, disconnectWhatsapp } from "@/ai/flows/whatsapp-flow";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type ConnectionStatus = "disconnected" | "loading" | "connected" | "error" | "qrcode";
 
@@ -21,7 +22,9 @@ export default function SettingsPage() {
     try {
       const response = await getWhatsappConnectionStatus();
       setStatus(response.status);
-      setQrCodeUrl(null);
+      if(response.status !== 'qrcode' && response.status !== 'loading') {
+        setQrCodeUrl(null);
+      }
     } catch (error) {
       console.error(error);
       setStatus("error");
@@ -33,16 +36,19 @@ export default function SettingsPage() {
     }
   }, [toast]);
 
+  // Initial status check
   useEffect(() => {
     checkStatus();
-  }, [checkStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Polling mechanism for transitional states
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
     if (status === 'qrcode' || status === 'loading') {
        interval = setInterval(() => {
          checkStatus();
-      }, 5000); // Check status every 5 seconds
+      }, 3000); // Check status every 3 seconds
     }
     return () => {
         if(interval) clearInterval(interval);
@@ -54,6 +60,11 @@ export default function SettingsPage() {
     setStatus("loading");
     setQrCodeUrl(null);
     try {
+      toast({
+        title: "Iniciando Conexão...",
+        description: "Aguarde um momento, estamos gerando o QR Code. Isso pode levar até 30 segundos.",
+      });
+
       const response = await generateWhatsappQrCode();
       if (response.qrCode) {
         setQrCodeUrl(response.qrCode);
@@ -63,7 +74,10 @@ export default function SettingsPage() {
           description: "Escaneie o código com o seu WhatsApp.",
         });
       } else {
-         throw new Error("QR Code não recebido.");
+         // This branch is hit if the flow returns an empty qrCode string.
+         // We rely on the polling `checkStatus` to update to 'error' or 'connected'
+         // so we don't show a premature error here. If after a while it's still
+         // loading, the user will see the error state anyway.
       }
     } catch (error) {
       console.error(error);
@@ -71,12 +85,13 @@ export default function SettingsPage() {
       toast({
         variant: "destructive",
         title: "Erro ao Gerar QR Code",
-        description: "Não foi possível gerar o código. Tente novamente.",
+        description: "Não foi possível gerar o código. Verifique o console para mais detalhes.",
       });
     }
   };
   
   const handleDisconnect = async () => {
+      setStatus("loading");
       try {
         await disconnectWhatsapp();
         setStatus('disconnected');
@@ -87,6 +102,7 @@ export default function SettingsPage() {
         });
       } catch (error) {
          console.error(error);
+         // The status check poll will eventually set the status to error or disconnected
          toast({
             variant: "destructive",
             title: "Erro ao Desconectar",
@@ -105,18 +121,24 @@ export default function SettingsPage() {
           </Badge>
         );
       case "loading":
+        return (
+          <Badge variant="secondary">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Carregando...
+          </Badge>
+        );
       case "qrcode":
         return (
           <Badge variant="secondary">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Aguardando Conexão...
+            Aguardando Leitura...
           </Badge>
         );
        case "error":
         return (
           <Badge variant="destructive">
             <AlertTriangle className="mr-2 h-4 w-4" />
-            Erro na Conexão
+            Erro
           </Badge>
         );
       case "disconnected":
@@ -151,14 +173,14 @@ export default function SettingsPage() {
              <div className="flex flex-col items-center space-y-4 p-8 border-dashed border-2 rounded-lg">
                  {qrCodeUrl ? (
                      <>
-                         <Image src={qrCodeUrl} alt="QR Code" width={256} height={256} data-ai-hint="qr code"/>
+                         <Image src={qrCodeUrl} alt="QR Code para conectar WhatsApp" width={256} height={256} data-ai-hint="qr code"/>
                          <p className="text-sm text-muted-foreground text-center max-w-xs">Abra o WhatsApp no seu celular, vá em Aparelhos Conectados e escaneie o código.</p>
                      </>
 
                  ) : (
                       <div className="flex flex-col items-center justify-center h-64 w-64">
-                         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                         <p className="mt-4 text-muted-foreground">Gerando QR Code...</p>
+                          <Skeleton className="h-64 w-64" />
+                          <p className="mt-4 text-muted-foreground">Gerando QR Code...</p>
                      </div>
                  )}
              </div>
@@ -178,9 +200,9 @@ export default function SettingsPage() {
               <AlertTriangle className="h-16 w-16 mx-auto" />
               <p className="text-lg font-medium">Falha na conexão</p>
               <p>Não foi possível conectar ao WhatsApp. Por favor, tente novamente.</p>
-              <Button onClick={handleGenerateQrCode} variant="outline">
+              <Button onClick={() => window.location.reload()} variant="outline">
                   <RefreshCw className="mr-2 h-4 w-4"/>
-                  Tentar Novamente
+                  Recarregar Página
               </Button>
           </div>
         );
