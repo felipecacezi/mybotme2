@@ -1,9 +1,11 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bot } from "lucide-react";
 import React from "react";
 
@@ -27,6 +29,8 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const { toast } = useToast();
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -41,6 +45,7 @@ export default function LoginPage() {
       title: "Login realizado com sucesso!",
       description: "Você será redirecionado em breve.",
     });
+    router.push("/dashboard");
   }
 
   return (
