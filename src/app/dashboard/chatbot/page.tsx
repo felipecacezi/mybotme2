@@ -24,6 +24,7 @@ import { Info, Plus, Trash2, Pencil, BotMessageSquare, GripVertical, ArrowRight 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 const chatbotSettingsSchema = z.object({
@@ -33,8 +34,6 @@ const chatbotSettingsSchema = z.object({
       message: "O contexto não pode exceder 4000 caracteres."
   }),
 });
-
-// --- Nova Estrutura para o Chatbot Comum ---
 
 const flowNodeOptionSchema = z.object({
   text: z.string().min(1, "O texto da opção não pode estar vazio."),
@@ -50,7 +49,6 @@ const flowNodeSchema = z.object({
 
 type FlowNode = z.infer<typeof flowNodeSchema>;
 
-// Mock de dados iniciais com a nova estrutura
 const initialFlowNodes: FlowNode[] = [
   {
     id: "start",
@@ -86,6 +84,7 @@ export default function ChatbotSettingsPage() {
   const { toast } = useToast();
   const [flowNodes, setFlowNodes] = useState<FlowNode[]>(initialFlowNodes);
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [isNodeEditorOpen, setIsNodeEditorOpen] = useState(false);
 
   const aiForm = useForm<z.infer<typeof chatbotSettingsSchema>>({
     resolver: zodResolver(chatbotSettingsSchema),
@@ -103,20 +102,16 @@ export default function ChatbotSettingsPage() {
     },
   });
 
-  const { fields, append, remove, update } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: flowForm.control,
     name: "options",
   });
 
-  const startNode = useMemo(() => flowNodes.find(n => n.isStartNode), [flowNodes]);
-
-  function onAiSubmit(values: z.infer<typeof chatbotSettingsSchema>) {
-    console.log("Chatbot Context:", values);
-    toast({
-      title: "Configurações de I.A. Salvas!",
-      description: "O contexto do seu chatbot foi atualizado com sucesso.",
-    });
-  }
+  const handleOpenEditorForNew = () => {
+    setEditingNodeId(null);
+    flowForm.reset({ id: "", text: "", options: [], isStartNode: false });
+    setIsNodeEditorOpen(true);
+  };
 
   function handleEditNode(node: FlowNode) {
     setEditingNodeId(node.id);
@@ -126,36 +121,28 @@ export default function ChatbotSettingsPage() {
       options: node.options || [],
       isStartNode: node.isStartNode,
     });
-  }
-
-  function handleCancelEdit() {
-    setEditingNodeId(null);
-    flowForm.reset({ id: "", text: "", options: [] });
+    setIsNodeEditorOpen(true);
   }
 
   function onFlowNodeSubmit(values: FlowNode) {
     if (editingNodeId) {
-      // Edit
       setFlowNodes(prev => prev.map(node => node.id === editingNodeId ? values : node));
       toast({ title: "Mensagem Atualizada!" });
     } else {
-      // Add
       const newNode: FlowNode = { ...values, id: `node_${Date.now()}` };
       setFlowNodes(prev => [...prev, newNode]);
       toast({ title: "Mensagem Adicionada!" });
     }
-    handleCancelEdit();
+    setIsNodeEditorOpen(false);
   }
 
   function handleDeleteNode(idToDelete: string) {
     setFlowNodes(prev => {
-      // Prevent deleting the start node
       const nodeToDelete = prev.find(n => n.id === idToDelete);
       if (nodeToDelete?.isStartNode) {
         toast({ variant: "destructive", title: "Ação não permitida", description: "Não é possível excluir a mensagem inicial." });
         return prev;
       }
-      // Remove node and update any options pointing to it
       const newNodes = prev
         .filter(n => n.id !== idToDelete)
         .map(n => ({
@@ -165,6 +152,14 @@ export default function ChatbotSettingsPage() {
       
       toast({ variant: "destructive", title: "Mensagem Removida" });
       return newNodes;
+    });
+  }
+
+  function onAiSubmit(values: z.infer<typeof chatbotSettingsSchema>) {
+    console.log("Chatbot Context:", values);
+    toast({
+      title: "Configurações de I.A. Salvas!",
+      description: "O contexto do seu chatbot foi atualizado com sucesso.",
     });
   }
 
@@ -214,95 +209,25 @@ export default function ChatbotSettingsPage() {
       </Card>
       
       <Card>
-        <CardHeader>
-          <CardTitle>Fluxo de Mensagens (Chatbot Comum)</CardTitle>
-          <CardDescription>
-            Crie um fluxo de mensagens interativas com opções para guiar o usuário.
-          </CardDescription>
+        <CardHeader className="flex-row items-center justify-between">
+          <div>
+            <CardTitle>Fluxo de Mensagens (Chatbot Comum)</CardTitle>
+            <CardDescription>
+              Crie um fluxo de mensagens interativas com opções para guiar o usuário.
+            </CardDescription>
+          </div>
+          <Button onClick={handleOpenEditorForNew}>
+            <Plus className="mr-2 h-4 w-4" />
+            Adicionar Mensagem
+          </Button>
         </CardHeader>
         <CardContent>
-            <Form {...flowForm}>
-              <form onSubmit={flowForm.handleSubmit(onFlowNodeSubmit)} className="space-y-6 p-4 border rounded-lg bg-muted/50">
-                <h3 className="text-lg font-semibold">{editingNodeId ? "Editando Mensagem" : "Adicionar Nova Mensagem"}</h3>
-                <FormField
-                  control={flowForm.control}
-                  name="text"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Texto da Mensagem do Bot</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Digite a mensagem do bot..." {...field} className="bg-background"/>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="space-y-4">
-                  <FormLabel>Opções de Resposta (Botões)</FormLabel>
-                   {fields.map((field, index) => (
-                    <div key={field.id} className="flex items-center gap-2 p-2 border rounded-md bg-background">
-                       <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab"/>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 flex-grow">
-                             <FormField
-                                control={flowForm.control}
-                                name={`options.${index}.text`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-xs">Texto do Botão</FormLabel>
-                                        <FormControl><Input placeholder="Ex: Agendar" {...field} /></FormControl>
-                                         <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                             <FormField
-                                control={flowForm.control}
-                                name={`options.${index}.nextId`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-xs">Próxima Mensagem</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
-                                            <SelectContent>
-                                                {flowNodes.filter(n => !n.isStartNode || n.id === 'start').map(node => (
-                                                    <SelectItem key={node.id} value={node.id}>
-                                                        {node.isStartNode ? "(Início) " : ""}{node.text.substring(0, 40)}...
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                        <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => remove(index)}>
-                            <Trash2 className="h-4 w-4"/>
-                        </Button>
-                    </div>
-                  ))}
-                  <Button type="button" variant="outline" size="sm" onClick={() => append({ text: "", nextId: "" })}>
-                    <Plus className="mr-2 h-4 w-4" /> Adicionar Opção
-                  </Button>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                    {editingNodeId && (
-                      <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancelar Edição</Button>
-                    )}
-                    <Button type="submit" className="font-bold">
-                        {editingNodeId ? "Salvar Mensagem" : "Adicionar Mensagem ao Fluxo"}
-                    </Button>
-                </div>
-              </form>
-            </Form>
-
-            <Separator className="my-8"/>
+            <Separator className="mb-6"/>
 
             <div className="space-y-6">
                 <h3 className="text-lg font-semibold text-foreground">Visualização do Fluxo</h3>
                 {flowNodes.length === 0 ? (
-                    <p className="text-sm text-center text-muted-foreground py-4">Nenhuma mensagem cadastrada. Adicione uma acima para começar.</p>
+                    <p className="text-sm text-center text-muted-foreground py-4">Nenhuma mensagem cadastrada. Adicione uma para começar.</p>
                 ) : (
                     <div className="space-y-4">
                         {flowNodes.map(node => (
@@ -351,8 +276,87 @@ export default function ChatbotSettingsPage() {
             </div>
         </CardContent>
       </Card>
+
+      {/* Node Editor Dialog */}
+      <Dialog open={isNodeEditorOpen} onOpenChange={setIsNodeEditorOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{editingNodeId ? "Editar Mensagem" : "Adicionar Nova Mensagem"}</DialogTitle>
+          </DialogHeader>
+           <Form {...flowForm}>
+              <form onSubmit={flowForm.handleSubmit(onFlowNodeSubmit)} className="space-y-6 pt-4">
+                <FormField
+                  control={flowForm.control}
+                  name="text"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Texto da Mensagem do Bot</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Digite a mensagem do bot..." {...field} className="min-h-[100px]"/>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="space-y-4">
+                  <FormLabel>Opções de Resposta (Botões)</FormLabel>
+                   {fields.map((field, index) => (
+                    <div key={field.id} className="flex items-center gap-2 p-3 border rounded-md bg-muted/50">
+                       <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab"/>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 flex-grow">
+                             <FormField
+                                control={flowForm.control}
+                                name={`options.${index}.text`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs">Texto do Botão</FormLabel>
+                                        <FormControl><Input placeholder="Ex: Agendar" {...field} /></FormControl>
+                                         <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={flowForm.control}
+                                name={`options.${index}.nextId`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs">Próxima Mensagem</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                {flowNodes.filter(n => !n.isStartNode || n.id === 'start').map(node => (
+                                                    <SelectItem key={node.id} value={node.id}>
+                                                        {node.isStartNode ? "(Início) " : ""}{node.text.substring(0, 40)}...
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive flex-shrink-0" onClick={() => remove(index)}>
+                            <Trash2 className="h-4 w-4"/>
+                        </Button>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" onClick={() => append({ text: "", nextId: "" })}>
+                    <Plus className="mr-2 h-4 w-4" /> Adicionar Opção
+                  </Button>
+                </div>
+
+                <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsNodeEditorOpen(false)}>Cancelar</Button>
+                    <Button type="submit" className="font-bold">
+                        {editingNodeId ? "Salvar Mensagem" : "Adicionar Mensagem"}
+                    </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-    
