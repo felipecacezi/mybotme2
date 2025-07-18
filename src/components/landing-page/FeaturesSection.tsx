@@ -5,7 +5,7 @@ const features = [
   {
     icon: <Bot className="w-8 h-8 text-primary" />,
     title: "Secretária Virtual Inteligente",
-    description: "Nossa I.A. compreende e responde às necessidades dos seus clientes de forma natural e eficiente.",
+    description: "Nossa I.A. compreende e responde em texto às necessidades dos seus clientes de forma natural e eficiente.",
   },
   {
     icon: <Clock className="w-8 h-8 text-primary" />,
