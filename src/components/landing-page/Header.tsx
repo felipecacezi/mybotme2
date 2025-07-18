@@ -26,20 +26,20 @@ export default function Header() {
       scrolled ? "bg-background/80 backdrop-blur-sm border-b" : "bg-transparent"
     )}>
       <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
-        <Link href="#" className="flex items-center gap-2" prefetch={false}>
+        <Link href="/" className="flex items-center gap-2" prefetch={false}>
           <Bot className="h-8 w-8 text-primary" />
           <span className="text-2xl font-bold">MyBotMe</span>
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-lg font-medium">
-          <Link href="#features" className="hover:text-primary transition-colors" prefetch={false}>
+          <Link href="/#features" className="hover:text-primary transition-colors" prefetch={false}>
             Funcionalidades
           </Link>
-          <Link href="#faq" className="hover:text-primary transition-colors" prefetch={false}>
+          <Link href="/#faq" className="hover:text-primary transition-colors" prefetch={false}>
             FAQ
           </Link>
         </nav>
-        <Button size="lg" className="rounded-full font-bold">
-          Comece Agora
+        <Button size="lg" className="rounded-full font-bold" asChild>
+          <Link href="/cadastro">Comece Agora</Link>
         </Button>
       </div>
     </header>

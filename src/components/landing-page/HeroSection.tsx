@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function HeroSection() {
   return (
@@ -17,8 +18,8 @@ export default function HeroSection() {
               O MyBotMe transforma seu WhatsApp em uma poderosa ferramenta de vendas e suporte, funcionando 24/7 para você não perder nenhuma oportunidade.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row">
-              <Button size="lg" className="h-12 text-lg rounded-full font-bold">
-                Criar meu Bot Grátis
+              <Button size="lg" className="h-12 text-lg rounded-full font-bold" asChild>
+                <Link href="/cadastro">Criar meu Bot Grátis</Link>
               </Button>
             </div>
           </div>
