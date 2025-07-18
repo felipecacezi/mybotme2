@@ -27,6 +27,7 @@ import { maskCPF, maskCNPJ, maskCEP } from "@/lib/masks";
 const formSchema = z.object({
   email: z.string().email({ message: "Por favor, insira um e-mail válido." }),
   password: z.string().min(8, { message: "A senha deve ter pelo menos 8 caracteres." }),
+  confirmPassword: z.string(),
   documentType: z.enum(["cpf", "cnpj"], { required_error: "Selecione uma opção." }),
   document: z.string().min(1, { message: "O documento é obrigatório." }),
   address: z.object({
@@ -49,16 +50,22 @@ const formSchema = z.object({
 }, {
     message: "O número do documento está incompleto.",
     path: ['document']
+}).refine(data => data.password === data.confirmPassword, {
+    message: "As senhas não coincidem.",
+    path: ["confirmPassword"],
 });
 
 export default function CadastroPage() {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
       document: "",
       address: {
         zip: "",
@@ -187,6 +194,34 @@ export default function CadastroPage() {
                           aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                         >
                           {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        </button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirmar Senha</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          placeholder="********"
+                          {...field}
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                          aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                        >
+                          {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         </button>
                       </div>
                     </FormControl>
