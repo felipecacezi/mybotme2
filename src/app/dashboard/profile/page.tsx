@@ -4,7 +4,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, AlertTriangle } from "lucide-react";
 import React, { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { maskCPF, maskCNPJ, maskCEP } from "@/lib/masks";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const profileFormSchema = z.object({
   email: z.string().email({ message: "Por favor, insira um e-mail válido." }),
@@ -50,12 +51,23 @@ const profileFormSchema = z.object({
 });
 
 
+const deleteAccountSchema = z.object({
+  deletePassword: z.string().min(1, { message: "A senha é obrigatória." }),
+  deleteConfirmPassword: z.string().min(1, { message: "A confirmação de senha é obrigatória." }),
+}).refine(data => data.deletePassword === data.deleteConfirmPassword, {
+    message: "As senhas não coincidem.",
+    path: ["deleteConfirmPassword"],
+});
+
+
 export default function ProfilePage() {
   const { toast } = useToast();
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [showDeleteConfirmPassword, setShowDeleteConfirmPassword] = useState(false);
 
-  const form = useForm<z.infer<typeof profileFormSchema>>({
+  const profileForm = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       email: "shadcn@example.com",
@@ -75,18 +87,27 @@ export default function ProfilePage() {
     },
   });
 
-  const documentType = form.watch("documentType");
+  const deleteAccountForm = useForm<z.infer<typeof deleteAccountSchema>>({
+    resolver: zodResolver(deleteAccountSchema),
+    defaultValues: {
+      deletePassword: "",
+      deleteConfirmPassword: "",
+    },
+    mode: "onChange"
+  });
+
+  const documentType = profileForm.watch("documentType");
 
   const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     const maskedValue = documentType === 'cpf' ? maskCPF(value) : maskCNPJ(value);
-    form.setValue('document', maskedValue, { shouldValidate: true });
+    profileForm.setValue('document', maskedValue, { shouldValidate: true });
   };
   
   const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     const maskedValue = maskCEP(value);
-    form.setValue('address.zip', maskedValue, { shouldValidate: true });
+    profileForm.setValue('address.zip', maskedValue, { shouldValidate: true });
   };
 
   const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
@@ -100,21 +121,30 @@ export default function ProfilePage() {
         toast({ variant: "destructive", title: "Erro", description: "CEP não encontrado." });
         return;
       }
-      form.setValue('address.street', data.logradouro);
-      form.setValue('address.neighborhood', data.bairro);
-      form.setValue('address.city', data.localidade);
-      form.setValue('address.state', data.uf);
+      profileForm.setValue('address.street', data.logradouro);
+      profileForm.setValue('address.neighborhood', data.bairro);
+      profileForm.setValue('address.city', data.localidade);
+      profileForm.setValue('address.state', data.uf);
       toast({ title: "Endereço encontrado!", description: "Seu endereço foi atualizado." });
     } catch (error) {
        toast({ variant: "destructive", title: "Erro de Rede", description: "Não foi possível buscar o CEP." });
     }
   };
 
-  function onSubmit(values: z.infer<typeof profileFormSchema>) {
+  function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
     console.log(values);
     toast({
       title: "Perfil atualizado!",
       description: "Seus dados foram salvos com sucesso.",
+    });
+  }
+
+  function onDeleteAccountSubmit(values: z.infer<typeof deleteAccountSchema>) {
+    console.log("Deleting account with credentials:", values);
+    toast({
+      variant: "destructive",
+      title: "Conta excluída!",
+      description: "Sua conta foi permanentemente excluída.",
     });
   }
 
@@ -126,10 +156,10 @@ export default function ProfilePage() {
           <CardDescription>Atualize suas informações pessoais e de endereço.</CardDescription>
         </CardHeader>
         <CardContent>
-           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+           <Form {...profileForm}>
+            <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
               <FormField
-                control={form.control}
+                control={profileForm.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
@@ -142,7 +172,7 @@ export default function ProfilePage() {
                 )}
               />
               <FormField
-                control={form.control}
+                control={profileForm.control}
                 name="document"
                 render={({ field }) => (
                   <FormItem>
@@ -164,7 +194,7 @@ export default function ProfilePage() {
               
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
-                  control={form.control}
+                  control={profileForm.control}
                   name="newPassword"
                   render={({ field }) => (
                     <FormItem>
@@ -192,7 +222,7 @@ export default function ProfilePage() {
                   )}
                 />
                 <FormField
-                  control={form.control}
+                  control={profileForm.control}
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
@@ -225,7 +255,7 @@ export default function ProfilePage() {
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormField
-                    control={form.control}
+                    control={profileForm.control}
                     name="address.zip"
                     render={({ field }) => (
                       <FormItem className="md:col-span-1">
@@ -243,7 +273,7 @@ export default function ProfilePage() {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={profileForm.control}
                     name="address.street"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
@@ -259,7 +289,7 @@ export default function ProfilePage() {
 
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormField
-                    control={form.control}
+                    control={profileForm.control}
                     name="address.number"
                     render={({ field }) => (
                       <FormItem>
@@ -272,7 +302,7 @@ export default function ProfilePage() {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={profileForm.control}
                     name="address.complement"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
@@ -288,7 +318,7 @@ export default function ProfilePage() {
                 
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                    <FormField
-                    control={form.control}
+                    control={profileForm.control}
                     name="address.neighborhood"
                     render={({ field }) => (
                       <FormItem>
@@ -301,7 +331,7 @@ export default function ProfilePage() {
                     )}
                   />
                    <FormField
-                    control={form.control}
+                    control={profileForm.control}
                     name="address.city"
                     render={({ field }) => (
                       <FormItem>
@@ -314,7 +344,7 @@ export default function ProfilePage() {
                     )}
                   />
                    <FormField
-                    control={form.control}
+                    control={profileForm.control}
                     name="address.state"
                     render={({ field }) => (
                       <FormItem>
@@ -333,6 +363,97 @@ export default function ProfilePage() {
           </Form>
         </CardContent>
       </Card>
+
+      <Card className="border-destructive">
+        <CardHeader>
+          <CardTitle>Excluir Conta</CardTitle>
+          <CardDescription>
+            Esta ação é irreversível. Todos os seus dados serão permanentemente excluídos.
+            Por favor, digite sua senha para confirmar a exclusão.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Atenção</AlertTitle>
+            <AlertDescription>
+              Tem certeza de que deseja excluir sua conta?
+            </AlertDescription>
+          </Alert>
+          <Form {...deleteAccountForm}>
+            <form onSubmit={deleteAccountForm.handleSubmit(onDeleteAccountSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                    control={deleteAccountForm.control}
+                    name="deletePassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Senha</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type={showDeletePassword ? "text" : "password"} 
+                              placeholder="********" 
+                              {...field}
+                              className="pr-10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowDeletePassword(!showDeletePassword)}
+                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                              aria-label={showDeletePassword ? "Ocultar senha" : "Mostrar senha"}
+                            >
+                              {showDeletePassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={deleteAccountForm.control}
+                    name="deleteConfirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirmar Senha</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type={showDeleteConfirmPassword ? 'text' : 'password'}
+                              placeholder="********"
+                              {...field}
+                              className="pr-10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowDeleteConfirmPassword(!showDeleteConfirmPassword)}
+                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                              aria-label={showDeleteConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                            >
+                              {showDeleteConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+              </div>
+              <Button 
+                type="submit" 
+                variant="destructive" 
+                className="w-full font-bold !mt-6"
+                disabled={!deleteAccountForm.formState.isValid}
+              >
+                Excluir Minha Conta Permanentemente
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
+    
