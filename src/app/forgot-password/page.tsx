@@ -5,8 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Bot } from "lucide-react";
+import { Bot, Mail } from "lucide-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -23,29 +22,26 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  email: z.string().min(1, { message: "O e-mail é obrigatório." }),
-  password: z.string().min(1, { message: "A senha é obrigatória." }),
+  email: z.string().email({ message: "Por favor, insira um e-mail válido." }),
 });
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
   const { toast } = useToast();
-  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      password: "",
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
     toast({
-      title: "Login realizado com sucesso!",
-      description: "Você será redirecionado em breve.",
+      title: "Link Enviado!",
+      description: "Se o e-mail estiver cadastrado, você receberá um link para redefinir sua senha.",
     });
-    router.push("/dashboard");
+    form.reset();
   }
 
   return (
@@ -58,9 +54,9 @@ export default function LoginPage() {
       </div>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">Acesse sua Conta</CardTitle>
+          <CardTitle className="text-2xl font-bold">Recuperar Senha</CardTitle>
           <CardDescription>
-            Que bom te ver de volta! Insira seus dados para continuar.
+            Insira seu e-mail e enviaremos um link para você voltar a acessar sua conta.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -73,37 +69,22 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>E-mail</FormLabel>
                     <FormControl>
-                      <Input placeholder="seuemail@exemplo.com" {...field} />
+                        <div className="relative">
+                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                           <Input placeholder="seuemail@exemplo.com" {...field} className="pl-10" />
+                        </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Senha</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="********" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <div className="flex justify-end pt-1">
-                  <Link href="/forgot-password" className="text-sm text-primary underline hover:text-primary/80">
-                      Esqueci minha senha
-                  </Link>
-               </div>
-              <Button type="submit" className="w-full font-bold !mt-6">Entrar</Button>
+              <Button type="submit" className="w-full font-bold !mt-6">Enviar Link de Recuperação</Button>
             </form>
           </Form>
           <div className="mt-6 text-center text-sm">
-            Não tem uma conta?{" "}
-            <Link href="/cadastro" className="underline text-primary">
-              Cadastre-se
+            Lembrou da senha?{" "}
+            <Link href="/login" className="underline text-primary">
+              Faça login
             </Link>
           </div>
         </CardContent>
