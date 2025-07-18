@@ -30,8 +30,17 @@ const aiSettingsFormSchema = z.object({
   provider: z.string({
     required_error: "Por favor, selecione um provedor de I.A.",
   }),
-  apiKey: z.string().min(1, { message: "A chave da API é obrigatória." }),
+  apiKey: z.string().optional(),
+}).refine(data => {
+  if (data.provider === 'openai' && (!data.apiKey || data.apiKey.trim() === '')) {
+    return false;
+  }
+  return true;
+}, {
+  message: "A chave da API é obrigatória para este provedor.",
+  path: ["apiKey"],
 });
+
 
 export default function SettingsPage() {
   const [status, setStatus] = useState<ConnectionStatus>("loading");
@@ -42,10 +51,12 @@ export default function SettingsPage() {
   const aiForm = useForm<z.infer<typeof aiSettingsFormSchema>>({
     resolver: zodResolver(aiSettingsFormSchema),
     defaultValues: {
-      provider: "openai",
+      provider: "mybotme",
       apiKey: "",
     },
   });
+  
+  const selectedProvider = aiForm.watch("provider");
 
   function onAiSettingsSubmit(values: z.infer<typeof aiSettingsFormSchema>) {
     console.log("AI Settings:", values);
@@ -293,6 +304,7 @@ export default function SettingsPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="mybotme">MyBotMe (Plataforma)</SelectItem>
                         <SelectItem value="openai">OpenAI (ChatGPT)</SelectItem>
                       </SelectContent>
                     </Select>
@@ -300,35 +312,37 @@ export default function SettingsPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={aiForm.control}
-                name="apiKey"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Chave da API (API Key)</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          type={showApiKey ? "text" : "password"}
-                          placeholder="••••••••••••••••••••••••••••••"
-                          {...field}
-                          className="pl-10 pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowApiKey(!showApiKey)}
-                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-                          aria-label={showApiKey ? "Ocultar chave" : "Mostrar chave"}
-                        >
-                          {showApiKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {selectedProvider === 'openai' && (
+                <FormField
+                  control={aiForm.control}
+                  name="apiKey"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Chave da API (API Key)</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            type={showApiKey ? "text" : "password"}
+                            placeholder="••••••••••••••••••••••••••••••"
+                            {...field}
+                            className="pl-10 pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowApiKey(!showApiKey)}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                            aria-label={showApiKey ? "Ocultar chave" : "Mostrar chave"}
+                          >
+                            {showApiKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <Button type="submit" className="font-bold">Salvar Configurações</Button>
             </form>
           </Form>
@@ -337,4 +351,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
