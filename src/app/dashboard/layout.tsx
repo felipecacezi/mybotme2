@@ -8,7 +8,6 @@ import {
   Bot, 
   LayoutDashboard, 
   Settings, 
-  LineChart, 
   LogOut,
   User
 } from 'lucide-react';
@@ -42,7 +41,6 @@ export default function DashboardLayout({
   const getPageTitle = () => {
     if (pathname.startsWith('/dashboard/profile')) return 'Perfil';
     if (pathname.startsWith('/dashboard/settings')) return 'Configurações';
-    if (pathname.startsWith('/dashboard/reports')) return 'Relatórios';
     const currentItem = menuItems.find(item => item.href === pathname || (item.href !== '/dashboard' && pathname.startsWith(item.href)));
     return currentItem?.label || 'Dashboard';
   };
