@@ -27,7 +27,7 @@ const formSchema = z.object({
   email: z.string().email({ message: "Por favor, insira um e-mail válido." }),
   password: z.string().min(8, { message: "A senha deve ter pelo menos 8 caracteres." }),
   documentType: z.enum(["cpf", "cnpj"], { required_error: "Selecione uma opção." }),
-  document: z.string().min(11, { message: "Documento inválido." }),
+  document: z.string().min(1, { message: "O documento é obrigatório." }),
   address: z.object({
     zip: z.string().optional(),
     street: z.string().optional(),
@@ -37,6 +37,17 @@ const formSchema = z.object({
     city: z.string().optional(),
     state: z.string().optional(),
   }).optional(),
+}).refine(data => {
+    if (data.documentType === 'cpf') {
+      return data.document.replace(/\D/g, '').length === 11;
+    }
+    if (data.documentType === 'cnpj') {
+      return data.document.replace(/\D/g, '').length === 14;
+    }
+    return false;
+}, {
+    message: "O número do documento está incompleto.",
+    path: ['document']
 });
 
 export default function CadastroPage() {
@@ -58,6 +69,32 @@ export default function CadastroPage() {
       }
     },
   });
+
+  const documentType = form.watch("documentType");
+
+  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    const onlyDigits = value.replace(/\D/g, '');
+    let maskedValue = onlyDigits;
+
+    if (documentType === 'cpf') {
+      maskedValue = onlyDigits
+        .slice(0, 11)
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    } else if (documentType === 'cnpj') {
+      maskedValue = onlyDigits
+        .slice(0, 14)
+        .replace(/(\d{2})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1/$2')
+        .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+    }
+
+    form.setValue('document', maskedValue, { shouldValidate: true });
+  };
+
 
   const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const cep = e.target.value.replace(/\D/g, '');
@@ -159,7 +196,10 @@ export default function CadastroPage() {
                     <FormLabel>Tipo de Documento</FormLabel>
                     <FormControl>
                       <RadioGroup
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          form.setValue('document', '', { shouldValidate: true });
+                        }}
                         defaultValue={field.value}
                         className="flex flex-row space-x-4"
                       >
@@ -188,7 +228,12 @@ export default function CadastroPage() {
                   <FormItem>
                     <FormLabel>CPF ou CNPJ</FormLabel>
                     <FormControl>
-                      <Input placeholder="00.000.000/0000-00" {...field} />
+                      <Input 
+                        placeholder={documentType === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'} 
+                        {...field}
+                        onChange={handleDocumentChange}
+                        disabled={!documentType}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
