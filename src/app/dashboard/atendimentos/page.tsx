@@ -11,7 +11,7 @@ import {
   DragOverlay,
   DragStartEvent,
   DragEndEvent,
-  rectIntersection, // Importar a nova estratégia
+  rectIntersection,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -20,7 +20,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, GripVertical, User, Clock, MessageSquare, Pencil } from 'lucide-react';
+import { Plus, GripVertical, User, Clock, MessageSquare, Pencil, Send } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,9 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from '@/lib/utils';
 
 // --- TYPES ---
 type Id = string | number;
@@ -49,6 +51,13 @@ type Task = {
   tags?: string[];
 };
 
+type Message = {
+    id: number;
+    text: string;
+    sender: 'user' | 'bot' | 'agent';
+    timestamp: string;
+}
+
 // --- MOCK DATA ---
 const initialColumns: Column[] = [
   { id: 'awaiting', title: 'Aguardando Atendimento' },
@@ -59,15 +68,21 @@ const initialTasks: Task[] = [
   { id: 2, columnId: 'awaiting', name: '+55 11 98765-4321', lastMessage: 'Preciso de ajuda com a minha fatura.', time: 'Ontem', tags: ["Suporte", "Urgente"] },
   { id: 3, columnId: 'awaiting', name: 'João Pereira', lastMessage: 'Qual o valor da integração?', time: '09:30', avatar: "https://github.com/vercel.png" },
   { id: 4, columnId: 'awaiting', name: 'Ana Costa', lastMessage: 'Agendamento confirmado para 15/07 às 14h.', time: 'Ontem', avatar: "https://github.com/radix-ui.png", tags: ["Cliente"] },
-  { id: 5, columnId: 'awaiting', name: 'Carlos Souza', lastMessage: 'Perfeito, vou finalizar a compra.', time: '2 dias atrás', avatar: "https://github.com/nextjs.png" },
+  { id: 5, columnId: 'awaiting', name: 'Carlos Souza', lastMessage: 'Perfeito, vou finalizar a compra.', time: '2 dias atrás' },
   { id: 6, columnId: 'awaiting', name: 'Fernanda Lima', lastMessage: 'O bot de vocês é incrível!', time: '11:20', avatar: "https://github.com/nextjs.png" },
 ];
 
+const conversationHistory: Message[] = [
+    { id: 1, text: "Olá! Gostaria de saber mais sobre o plano Pro.", sender: 'user', timestamp: "10:40" },
+    { id: 2, text: "Olá, Maria! Bem-vinda ao MyBotMe. O Plano Pro custa R$99/mês e inclui automações ilimitadas e integração com CRM. Posso ajudar com mais alguma coisa?", sender: 'bot', timestamp: "10:41" },
+    { id: 3, text: "Parece ótimo! E como funciona a integração?", sender: 'user', timestamp: "10:42" },
+    { id: 4, text: "A integração é bem simples! Você pode conectar com Hubspot ou Salesforce diretamente no nosso painel de configurações. O processo leva menos de 5 minutos.", sender: 'bot', timestamp: "10:43" },
+];
 
 // --- COMPONENTS ---
 
 // Task Card Component
-function TaskCard({ task }: { task: Task }) {
+function TaskCard({ task, onCardClick }: { task: Task, onCardClick: (Task) => void }) {
   const {
     attributes,
     listeners,
@@ -100,7 +115,7 @@ function TaskCard({ task }: { task: Task }) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
-        <Card className="mb-3 hover:shadow-md transition-shadow duration-200 bg-card">
+        <Card className="mb-3 hover:shadow-md transition-shadow duration-200 bg-card cursor-pointer" onClick={() => onCardClick(task)}>
            <CardHeader className="p-4 flex flex-row items-center justify-between">
                 <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9">
@@ -112,7 +127,7 @@ function TaskCard({ task }: { task: Task }) {
                         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Clock size={12} /> {task.time}</p>
                     </div>
                 </div>
-                <div {...listeners} className="cursor-grab p-2 text-muted-foreground hover:text-foreground">
+                <div {...listeners} className="cursor-grab p-2 text-muted-foreground hover:text-foreground" onClick={(e) => e.stopPropagation()}>
                     <GripVertical size={18} />
                 </div>
            </CardHeader>
@@ -133,11 +148,13 @@ function TaskCard({ task }: { task: Task }) {
 function ColumnContainer({
   column,
   tasks,
-  updateColumnName
+  updateColumnName,
+  onCardClick,
 }: {
   column: Column;
   tasks: Task[];
-  updateColumnName: (id: Id, newTitle: string) => void;
+  updateColumnName: (Id, string) => void;
+  onCardClick: (Task) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(column.title);
@@ -201,7 +218,7 @@ function ColumnContainer({
             <CardContent className="p-3">
                     <SortableContext items={tasks.map(t => t.id)} strategy={rectSortingStrategy}>
                         {tasks.map(task => (
-                            <TaskCard key={task.id} task={task} />
+                            <TaskCard key={task.id} task={task} onCardClick={onCardClick} />
                         ))}
                     </SortableContext>
             </CardContent>
@@ -216,6 +233,8 @@ export default function AtendimentosPage() {
     const [columns, setColumns] = useState<Column[]>(initialColumns);
     const [tasks, setTasks] = useState<Task[]>(initialTasks);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const [isConversationOpen, setIsConversationOpen] = useState(false);
     
     const [isAddColumnDialogOpen, setIsAddColumnDialogOpen] = useState(false);
     const [newColumnName, setNewColumnName] = useState("");
@@ -224,10 +243,30 @@ export default function AtendimentosPage() {
     const sensors = useSensors(
         useSensor(PointerSensor, {
           activationConstraint: {
-            distance: 5, // 5px
+            distance: 10, // 10px
           },
         })
     );
+    
+    const handleCardClick = (task: Task) => {
+        setSelectedTask(task);
+        setIsConversationOpen(true);
+    };
+    
+    const handleInterventionSend = () => {
+        toast({
+            title: "Mensagem Enviada!",
+            description: "Sua mensagem foi enviada para o cliente.",
+        });
+    };
+    
+    const handleReturnToBot = () => {
+        setIsConversationOpen(false);
+        toast({
+            title: "Atendimento devolvido ao Robô",
+            description: "A automação continuará o atendimento.",
+        });
+    }
 
     const onDragStart = (event: DragStartEvent) => {
         if (event.active.data.current?.type === 'Task') {
@@ -253,7 +292,6 @@ export default function AtendimentosPage() {
             setTasks(currentTasks => {
                 const activeIndex = currentTasks.findIndex(t => t.id === activeId);
                 currentTasks[activeIndex].columnId = overId;
-                // This triggers a re-render by creating a new array
                 return arrayMove(currentTasks, activeIndex, activeIndex);
             });
         }
@@ -326,7 +364,7 @@ export default function AtendimentosPage() {
                 sensors={sensors}
                 onDragStart={onDragStart}
                 onDragEnd={onDragEnd}
-                collisionDetection={rectIntersection} // Estratégia de colisão atualizada
+                collisionDetection={rectIntersection}
             >
                 <SortableContext items={columns.map(c => c.id)} strategy={rectSortingStrategy}>
                     {columns.map(col => (
@@ -335,11 +373,12 @@ export default function AtendimentosPage() {
                             column={col}
                             tasks={tasks.filter(task => task.columnId === col.id)}
                             updateColumnName={updateColumnName}
+                            onCardClick={handleCardClick}
                         />
                     ))}
                 </SortableContext>
                  <DragOverlay>
-                    {activeTask && <TaskCard task={activeTask} />}
+                    {activeTask && <TaskCard task={activeTask} onCardClick={() => {}} />}
                 </DragOverlay>
             </DndContext>
             </div>
@@ -366,6 +405,53 @@ export default function AtendimentosPage() {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+        
+        {/* Conversation Dialog */}
+        <Dialog open={isConversationOpen} onOpenChange={setIsConversationOpen}>
+            <DialogContent className="sm:max-w-[600px] p-0 flex flex-col h-[80vh]">
+                <DialogHeader className="p-4 border-b flex-row items-center space-y-0">
+                    <div className="flex items-center gap-3">
+                         <Avatar className="h-10 w-10">
+                            <AvatarImage src={selectedTask?.avatar} />
+                            <AvatarFallback>{selectedTask?.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                           <DialogTitle className="text-base">{selectedTask?.name}</DialogTitle>
+                           <p className="text-xs text-green-600 font-medium">Online</p>
+                        </div>
+                    </div>
+                </DialogHeader>
+                <ScrollArea className="flex-grow p-4">
+                    <div className="space-y-4">
+                        {conversationHistory.map(msg => (
+                           <div key={msg.id} className={cn("flex items-end gap-2", msg.sender !== 'user' ? "justify-start" : "justify-end")}>
+                                {msg.sender !== 'user' && <Avatar className="h-8 w-8"><AvatarImage src={msg.sender === 'agent' ? "https://github.com/shadcn.png" : undefined} /><AvatarFallback>{msg.sender === 'agent' ? 'A' : 'B'}</AvatarFallback></Avatar>}
+                                <div className={cn("max-w-xs md:max-w-md rounded-lg px-3 py-2", 
+                                    msg.sender === 'user' ? "bg-primary text-primary-foreground rounded-br-none" : 
+                                    msg.sender === 'bot' ? "bg-muted text-muted-foreground rounded-bl-none" :
+                                    "bg-accent text-accent-foreground rounded-bl-none"
+                                )}>
+                                    <p className="text-sm">{msg.text}</p>
+                                    <p className="text-xs text-right mt-1 opacity-70">{msg.timestamp}</p>
+                                </div>
+                           </div>
+                        ))}
+                    </div>
+                </ScrollArea>
+                <DialogFooter className="p-4 border-t bg-background flex-col gap-2">
+                    <div className="relative w-full">
+                       <Textarea placeholder="Digite sua mensagem aqui..." className="pr-12"/>
+                       <Button size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8" onClick={handleInterventionSend}>
+                           <Send size={16}/>
+                           <span className="sr-only">Enviar</span>
+                       </Button>
+                    </div>
+                    <Button variant="outline" className="w-full" onClick={handleReturnToBot}>Devolver ao Robô</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
+
+    
