@@ -23,7 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Por favor, insira um e-mail válido." }),
+  email: z.string().min(1, { message: "O e-mail é obrigatório." }),
   password: z.string().min(1, { message: "A senha é obrigatória." }),
 });
 
