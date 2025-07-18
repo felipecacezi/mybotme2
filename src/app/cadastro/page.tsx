@@ -302,7 +302,7 @@ export default function CadastroPage() {
           </Form>
            <div className="mt-6 text-center text-sm">
             Já tem uma conta?{" "}
-            <Link href="#" className="underline text-primary">
+            <Link href="/login" className="underline text-primary">
               Faça login
             </Link>
           </div>
