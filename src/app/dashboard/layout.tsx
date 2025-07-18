@@ -9,7 +9,8 @@ import {
   LayoutDashboard, 
   Settings, 
   LogOut,
-  User
+  User,
+  MessageSquare
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -29,6 +30,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/atendimentos', label: 'Atendimentos', icon: MessageSquare },
 ];
 
 export default function DashboardLayout({
@@ -41,6 +43,7 @@ export default function DashboardLayout({
   const getPageTitle = () => {
     if (pathname.startsWith('/dashboard/profile')) return 'Perfil';
     if (pathname.startsWith('/dashboard/settings')) return 'Configurações';
+    if (pathname.startsWith('/dashboard/atendimentos')) return 'Atendimentos';
     const currentItem = menuItems.find(item => item.href === pathname || (item.href !== '/dashboard' && pathname.startsWith(item.href)));
     return currentItem?.label || 'Dashboard';
   };
@@ -118,14 +121,14 @@ export default function DashboardLayout({
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex items-center justify-between p-4 border-b">
+        <header className="flex items-center justify-between p-4 border-b bg-background sticky top-0 z-10">
           <SidebarTrigger />
            <h1 className="text-2xl font-semibold">
               {getPageTitle()}
             </h1>
           <div className="w-7 h-7" />
         </header>
-        <main className="p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
