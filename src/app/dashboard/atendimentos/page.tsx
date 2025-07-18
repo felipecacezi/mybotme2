@@ -19,14 +19,16 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, GripVertical, User, Clock, MessageSquare } from 'lucide-react';
+import { Plus, GripVertical, User, Clock, MessageSquare, Pencil } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 // --- TYPES ---
 type Id = string | number;
@@ -130,17 +132,41 @@ function TaskCard({ task }: { task: Task }) {
 function ColumnContainer({
   column,
   tasks,
+  updateColumnName
 }: {
   column: Column;
   tasks: Task[];
+  updateColumnName: (id: Id, newTitle: string) => void;
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState(column.title);
+
   const { setNodeRef } = useSortable({
     id: column.id,
     data: {
       type: 'Column',
       column,
     },
+    disabled: column.id === 'awaiting', // Disable sorting for the default column
   });
+
+  const handleTitleBlur = () => {
+    if (title.trim()) {
+        updateColumnName(column.id, title.trim());
+    } else {
+        setTitle(column.title); // Revert if empty
+    }
+    setIsEditing(false);
+  };
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+          handleTitleBlur();
+      } else if (e.key === 'Escape') {
+          setTitle(column.title);
+          setIsEditing(false);
+      }
+  }
 
   return (
     <div
@@ -149,9 +175,26 @@ function ColumnContainer({
     >
       <Card className="bg-muted/50 h-full flex flex-col">
         <CardHeader className="p-3 flex flex-row items-center justify-between border-b">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            {column.title} <Badge variant="secondary">{tasks.length}</Badge>
-          </CardTitle>
+          <div className="flex items-center gap-2 w-full">
+            {isEditing ? (
+              <Input 
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={handleTitleBlur}
+                onKeyDown={handleKeyDown}
+                autoFocus
+                className="bg-card border-primary"
+              />
+            ) : (
+             <CardTitle 
+                onClick={() => column.id !== 'awaiting' && setIsEditing(true)}
+                className={`text-base font-semibold flex items-center gap-2 ${column.id !== 'awaiting' ? 'cursor-pointer hover:text-primary' : ''}`}
+            >
+                {column.title} <Badge variant="secondary">{tasks.length}</Badge>
+                {column.id !== 'awaiting' && <Pencil className="h-3 w-3 text-muted-foreground ml-1" />}
+            </CardTitle>
+            )}
+          </div>
         </CardHeader>
         <ScrollArea className="flex-grow">
             <CardContent className="p-3">
@@ -172,6 +215,10 @@ export default function AtendimentosPage() {
     const [columns, setColumns] = useState<Column[]>(initialColumns);
     const [tasks, setTasks] = useState<Task[]>(initialTasks);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
+    
+    const [isAddColumnDialogOpen, setIsAddColumnDialogOpen] = useState(false);
+    const [newColumnName, setNewColumnName] = useState("");
+    const { toast } = useToast();
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -201,46 +248,72 @@ export default function AtendimentosPage() {
         const isOverATask = over.data.current?.type === 'Task';
         const isOverAColumn = over.data.current?.type === 'Column';
 
-        // Dropping a Task over another Task (reordering)
+        // Dropping a Task over another Task (reordering within or between columns)
         if (isActiveATask && isOverATask) {
-            setTasks(tasks => {
-                const activeIndex = tasks.findIndex(t => t.id === activeId);
-                const overIndex = tasks.findIndex(t => t.id === overId);
-                const activeTask = tasks[activeIndex];
-                const overTask = tasks[overIndex];
+            setTasks(currentTasks => {
+                const activeIndex = currentTasks.findIndex(t => t.id === activeId);
+                const overIndex = currentTasks.findIndex(t => t.id === overId);
+                const activeTask = currentTasks[activeIndex];
+                const overTask = currentTasks[overIndex];
 
                 if (activeTask.columnId !== overTask.columnId) {
-                    tasks[activeIndex].columnId = overTask.columnId;
-                    return arrayMove(tasks, activeIndex, overIndex);
+                    currentTasks[activeIndex].columnId = overTask.columnId;
+                    return arrayMove(currentTasks, activeIndex, overIndex);
                 }
-
-                return arrayMove(tasks, activeIndex, overIndex);
+                
+                return arrayMove(currentTasks, activeIndex, overIndex);
             });
         }
 
         // Dropping a Task over a Column
         if (isActiveATask && isOverAColumn) {
-            setTasks(tasks => {
-                const activeIndex = tasks.findIndex(t => t.id === activeId);
-                tasks[activeIndex].columnId = overId;
-                return arrayMove(tasks, activeIndex, activeIndex);
+            setTasks(currentTasks => {
+                const activeIndex = currentTasks.findIndex(t => t.id === activeId);
+                currentTasks[activeIndex].columnId = overId;
+                // This triggers a re-render by creating a new array
+                return arrayMove(currentTasks, activeIndex, activeIndex);
             });
         }
     };
     
-    function createNewColumn() {
+    function handleAddColumn() {
+        if (!newColumnName.trim()) {
+            toast({
+                variant: "destructive",
+                title: "Erro",
+                description: "O nome da coluna não pode estar vazio.",
+            });
+            return;
+        }
+
         const columnToAdd: Column = {
             id: `col-${Date.now()}`,
-            title: `Nova Coluna`
+            title: newColumnName.trim(),
         };
 
         setColumns([...columns, columnToAdd]);
+        setNewColumnName("");
+        setIsAddColumnDialogOpen(false);
+         toast({
+            title: "Coluna Adicionada!",
+            description: `A coluna "${columnToAdd.title}" foi criada.`,
+        });
     }
+
+    const updateColumnName = (id: Id, newTitle: string) => {
+        setColumns(currentColumns => 
+            currentColumns.map(col => col.id === id ? { ...col, title: newTitle } : col)
+        );
+         toast({
+            title: "Coluna Atualizada!",
+            description: `O nome da coluna foi alterado para "${newTitle}".`,
+        });
+    };
 
   return (
     <div className="flex flex-col h-[calc(100vh-73px)] overflow-hidden">
         <div className="p-4 border-b">
-             <Button onClick={createNewColumn}>
+             <Button onClick={() => setIsAddColumnDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Adicionar Coluna
             </Button>
@@ -259,6 +332,7 @@ export default function AtendimentosPage() {
                             key={col.id}
                             column={col}
                             tasks={tasks.filter(task => task.columnId === col.id)}
+                            updateColumnName={updateColumnName}
                         />
                     ))}
                 </SortableContext>
@@ -269,6 +343,28 @@ export default function AtendimentosPage() {
             </div>
             <ScrollBar orientation="horizontal" />
         </ScrollArea>
+        
+        {/* Add Column Dialog */}
+        <Dialog open={isAddColumnDialogOpen} onOpenChange={setIsAddColumnDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Adicionar Nova Coluna</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                    <Input
+                        value={newColumnName}
+                        onChange={(e) => setNewColumnName(e.target.value)}
+                        placeholder="Nome da Coluna (ex: Em Andamento)"
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddColumn()}
+                    />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsAddColumnDialogOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleAddColumn}>Adicionar</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
+
