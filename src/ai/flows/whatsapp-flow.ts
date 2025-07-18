@@ -12,6 +12,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import qrcode from 'qrcode';
 
 // In-memory state simulation (would be a database in a real app)
 let connectionState: 'disconnected' | 'qrcode' | 'connected' = 'disconnected';
@@ -65,11 +66,22 @@ const generateWhatsappQrCodeFlow = ai.defineFlow(
   async () => {
     connectionState = 'qrcode';
     lastQrCodeRequestTime = Date.now();
-    // In a real implementation, you would generate a real QR code here.
-    // We are using a placeholder for this prototype.
-    return {
-        qrCode: 'https://placehold.co/256x256.png'
-    };
+    
+    // Simulate a unique connection token
+    const qrCodeContent = `mybotme-connect-${Date.now()}`;
+    
+    try {
+      const qrCodeDataUrl = await qrcode.toDataURL(qrCodeContent, { width: 256 });
+      return {
+          qrCode: qrCodeDataUrl
+      };
+    } catch (err) {
+      console.error('Failed to generate QR code', err);
+      // Fallback or error handling
+      return {
+        qrCode: '' // Return empty string on failure
+      };
+    }
   }
 );
 
