@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
 import { Bot } from "lucide-react";
+import React from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 
 const formSchema = z.object({
@@ -39,6 +40,7 @@ const formSchema = z.object({
 });
 
 export default function CadastroPage() {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -56,6 +58,46 @@ export default function CadastroPage() {
       }
     },
   });
+
+  const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const cep = e.target.value.replace(/\D/g, '');
+
+    if (cep.length !== 8) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao buscar CEP",
+          description: "O CEP informado não foi encontrado.",
+        });
+        return;
+      }
+      
+      form.setValue('address.street', data.logradouro);
+      form.setValue('address.neighborhood', data.bairro);
+      form.setValue('address.city', data.localidade);
+      form.setValue('address.state', data.uf);
+
+      toast({
+        title: "Endereço encontrado!",
+        description: "Os campos de endereço foram preenchidos.",
+      });
+
+    } catch (error) {
+       toast({
+          variant: "destructive",
+          title: "Erro de Rede",
+          description: "Não foi possível conectar à API de CEP.",
+        });
+    }
+  };
+
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
@@ -163,7 +205,7 @@ export default function CadastroPage() {
                       <FormItem className="md:col-span-1">
                         <FormLabel>CEP</FormLabel>
                         <FormControl>
-                          <Input placeholder="00000-000" {...field} />
+                          <Input placeholder="00000-000" {...field} onBlur={handleCepBlur} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
