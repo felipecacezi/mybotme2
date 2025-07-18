@@ -92,6 +92,11 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
+               <div className="flex justify-end pt-1">
+                  <Link href="#" className="text-sm text-primary underline hover:text-primary/80">
+                      Esqueci minha senha
+                  </Link>
+               </div>
               <Button type="submit" className="w-full font-bold !mt-6">Entrar</Button>
             </form>
           </Form>
