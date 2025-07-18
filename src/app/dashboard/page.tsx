@@ -25,7 +25,7 @@ export default function DashboardPage() {
           </CardContent>
           <div className="p-6 pt-0">
               <Button asChild className="w-full">
-                  <Link href="#">Gerenciar Assinatura</Link>
+                  <Link href="/dashboard/planos">Gerenciar Assinatura</Link>
               </Button>
           </div>
         </Card>

@@ -46,6 +46,7 @@ export default function DashboardLayout({
     if (pathname.startsWith('/dashboard/settings')) return 'Configurações';
     if (pathname.startsWith('/dashboard/atendimentos')) return 'Atendimentos';
     if (pathname.startsWith('/dashboard/chatbot')) return 'Chatbot';
+    if (pathname.startsWith('/dashboard/planos')) return 'Planos e Assinatura';
     const currentItem = menuItems.find(item => item.href === pathname || (item.href !== '/dashboard' && pathname.startsWith(item.href)));
     return currentItem?.label || 'Dashboard';
   };
