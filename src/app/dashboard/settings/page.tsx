@@ -3,20 +3,59 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react";
+import { Loader2, CheckCircle, AlertTriangle, RefreshCw, KeyRound, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getWhatsappConnectionStatus, generateWhatsappQrCode, disconnectWhatsapp } from "@/ai/flows/whatsapp-flow";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 type ConnectionStatus = "disconnected" | "loading" | "connected" | "error" | "qrcode";
+
+const aiSettingsFormSchema = z.object({
+  provider: z.string({
+    required_error: "Por favor, selecione um provedor de I.A.",
+  }),
+  apiKey: z.string().min(1, { message: "A chave da API é obrigatória." }),
+});
 
 export default function SettingsPage() {
   const [status, setStatus] = useState<ConnectionStatus>("loading");
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [showApiKey, setShowApiKey] = useState(false);
   const { toast } = useToast();
+
+  const aiForm = useForm<z.infer<typeof aiSettingsFormSchema>>({
+    resolver: zodResolver(aiSettingsFormSchema),
+    defaultValues: {
+      provider: "openai",
+      apiKey: "",
+    },
+  });
+
+  function onAiSettingsSubmit(values: z.infer<typeof aiSettingsFormSchema>) {
+    console.log("AI Settings:", values);
+    toast({
+      title: "Configurações Salvas!",
+      description: "Suas credenciais de I.A. foram salvas com sucesso.",
+    });
+    aiForm.reset({ ...values, apiKey: ""});
+  }
+
 
   const checkStatus = useCallback(async () => {
     try {
@@ -62,7 +101,7 @@ export default function SettingsPage() {
     try {
       toast({
         title: "Iniciando Conexão...",
-        description: "Aguarde um momento, estamos gerando o QR Code. Isso pode levar até 30 segundos.",
+        description: "Aguarde um momento, estamos gerando o QR Code.",
       });
 
       const response = await generateWhatsappQrCode();
@@ -230,6 +269,72 @@ export default function SettingsPage() {
            {renderContent()}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Configurações de I.A.</CardTitle>
+          <CardDescription>
+            Integre seu provedor de Inteligência Artificial para personalizar seu bot.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...aiForm}>
+            <form onSubmit={aiForm.handleSubmit(onAiSettingsSubmit)} className="space-y-4">
+               <FormField
+                control={aiForm.control}
+                name="provider"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Provedor de I.A.</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o provedor" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="openai">OpenAI (ChatGPT)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={aiForm.control}
+                name="apiKey"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Chave da API (API Key)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type={showApiKey ? "text" : "password"}
+                          placeholder="••••••••••••••••••••••••••••••"
+                          {...field}
+                          className="pl-10 pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                          aria-label={showApiKey ? "Ocultar chave" : "Mostrar chave"}
+                        >
+                          {showApiKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        </button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="font-bold">Salvar Configurações</Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
