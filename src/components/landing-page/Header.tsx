@@ -38,9 +38,14 @@ export default function Header() {
             FAQ
           </Link>
         </nav>
-        <Button size="lg" className="rounded-full font-bold" asChild>
-          <Link href="/cadastro">Comece Agora</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+           <Button size="lg" variant="ghost" className="rounded-full font-bold" asChild>
+            <Link href="/login">Login</Link>
+          </Button>
+          <Button size="lg" className="rounded-full font-bold" asChild>
+            <Link href="/cadastro">Comece Agora</Link>
+          </Button>
+        </div>
       </div>
     </header>
   );
