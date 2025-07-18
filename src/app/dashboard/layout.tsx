@@ -54,7 +54,7 @@ export default function DashboardLayout({
           <SidebarMenu>
             {menuItems.map((item) => (
               <SidebarMenuItem key={item.href}>
-                <Link href={item.href} passHref legacyBehavior>
+                <Link href={item.href}>
                   <SidebarMenuButton isActive={pathname === item.href}>
                     <item.icon />
                     <span>{item.label}</span>
@@ -99,7 +99,7 @@ export default function DashboardLayout({
                 <span>Configurações</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem asChild>
                  <Link href="/login" className="flex items-center w-full">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sair</span>
