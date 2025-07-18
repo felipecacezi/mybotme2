@@ -82,7 +82,7 @@ const conversationHistory: Message[] = [
 // --- COMPONENTS ---
 
 // Task Card Component
-function TaskCard({ task, onCardClick }: { task: Task, onCardClick: (Task) => void }) {
+function TaskCard({ task, onCardClick }: { task: Task, onCardClick: (task: Task) => void }) {
   const {
     attributes,
     listeners,
@@ -153,8 +153,8 @@ function ColumnContainer({
 }: {
   column: Column;
   tasks: Task[];
-  updateColumnName: (Id, string) => void;
-  onCardClick: (Task) => void;
+  updateColumnName: (id: Id, newTitle: string) => void;
+  onCardClick: (task: Task) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(column.title);
@@ -416,8 +416,12 @@ export default function AtendimentosPage() {
                             <AvatarFallback>{selectedTask?.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                           <DialogTitle className="text-base">{selectedTask?.name}</DialogTitle>
-                           <p className="text-xs text-green-600 font-medium">Online</p>
+                           <DialogTitle className="text-base flex items-center gap-2">{selectedTask?.name}</DialogTitle>
+                            {selectedTask?.tags && selectedTask.tags.length > 0 && (
+                               <div className="flex flex-wrap gap-1 mt-1">
+                                   {selectedTask.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+                               </div>
+                           )}
                         </div>
                     </div>
                 </DialogHeader>
