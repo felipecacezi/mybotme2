@@ -30,7 +30,7 @@ const features = [
   {
     icon: <Settings className="w-8 h-8 text-primary" />,
     title: "Totalmente Personalizável",
-    description: "Adapte o tom de voz, as respostas e o fluxo de conversa para a identidade da sua marca.",
+    description: "Adapte o estilo de escrita, as respostas e o fluxo de conversa para a identidade da sua marca.",
   },
 ];
 
