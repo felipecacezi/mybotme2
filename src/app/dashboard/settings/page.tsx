@@ -27,8 +27,8 @@ import { Input } from "@/components/ui/input";
 type ConnectionStatus = "disconnected" | "loading" | "connected" | "error" | "qrcode";
 
 const aiSettingsFormSchema = z.object({
-  provider: z.string({
-    required_error: "Por favor, selecione um provedor de I.A.",
+  provider: z.enum(["mybotme", "openai", "disabled"], {
+    required_error: "Por favor, selecione uma opção.",
   }),
   apiKey: z.string().optional(),
 }).refine(data => {
@@ -306,6 +306,7 @@ export default function SettingsPage() {
                       <SelectContent>
                         <SelectItem value="mybotme">MyBotMe (Plataforma)</SelectItem>
                         <SelectItem value="openai">OpenAI (ChatGPT)</SelectItem>
+                        <SelectItem value="disabled">Desativado (usar chatbot comum)</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
