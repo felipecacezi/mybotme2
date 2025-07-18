@@ -20,9 +20,6 @@ export default function HeroSection() {
               <Button size="lg" className="h-12 text-lg rounded-full font-bold">
                 Criar meu Bot Grátis
               </Button>
-              <Button size="lg" variant="outline" className="h-12 text-lg rounded-full font-bold border-2">
-                Ver Demonstração
-              </Button>
             </div>
           </div>
           <div className="flex items-center justify-center">
