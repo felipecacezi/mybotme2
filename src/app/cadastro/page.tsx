@@ -27,7 +27,15 @@ const formSchema = z.object({
   password: z.string().min(8, { message: "A senha deve ter pelo menos 8 caracteres." }),
   documentType: z.enum(["cpf", "cnpj"], { required_error: "Selecione uma opção." }),
   document: z.string().min(11, { message: "Documento inválido." }),
-  address: z.string().optional(),
+  address: z.object({
+    zip: z.string().optional(),
+    street: z.string().optional(),
+    number: z.string().optional(),
+    complement: z.string().optional(),
+    neighborhood: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+  }).optional(),
 });
 
 export default function CadastroPage() {
@@ -37,7 +45,15 @@ export default function CadastroPage() {
       email: "",
       password: "",
       document: "",
-      address: "",
+      address: {
+        zip: "",
+        street: "",
+        number: "",
+        complement: "",
+        neighborhood: "",
+        city: "",
+        state: "",
+      }
     },
   });
 
@@ -57,7 +73,7 @@ export default function CadastroPage() {
           <span className="text-2xl font-bold">MyBotMe</span>
         </Link>
       </div>
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Crie sua Conta</CardTitle>
           <CardDescription>
@@ -66,7 +82,7 @@ export default function CadastroPage() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="email"
@@ -136,20 +152,110 @@ export default function CadastroPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Endereço da Empresa (Opcional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Rua, número, bairro, cidade" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full font-bold">Criar Conta</Button>
+              
+              <p className="text-sm font-medium text-muted-foreground pt-2">Endereço da Empresa (Opcional)</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="address.zip"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-1">
+                        <FormLabel>CEP</FormLabel>
+                        <FormControl>
+                          <Input placeholder="00000-000" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address.street"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Logradouro</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Rua, Av, etc." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+              </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="address.number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Número</FormLabel>
+                        <FormControl>
+                          <Input placeholder="123" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address.complement"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Complemento</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Apto, Bloco, etc." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                   <FormField
+                    control={form.control}
+                    name="address.neighborhood"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bairro</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Seu bairro" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={form.control}
+                    name="address.city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cidade</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Sua cidade" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={form.control}
+                    name="address.state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estado</FormLabel>
+                        <FormControl>
+                          <Input placeholder="UF" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+              <Button type="submit" className="w-full font-bold !mt-6">Criar Conta</Button>
             </form>
           </Form>
            <div className="mt-6 text-center text-sm">
