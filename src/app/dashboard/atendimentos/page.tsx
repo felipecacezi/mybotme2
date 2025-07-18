@@ -11,6 +11,7 @@ import {
   DragOverlay,
   DragStartEvent,
   DragEndEvent,
+  rectIntersection, // Importar a nova estratégia
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -245,8 +246,19 @@ export default function AtendimentosPage() {
         if (activeId === overId) return;
 
         const isActiveATask = active.data.current?.type === 'Task';
-        const isOverATask = over.data.current?.type === 'Task';
         const isOverAColumn = over.data.current?.type === 'Column';
+
+        // Dropping a Task over a Column
+        if (isActiveATask && isOverAColumn) {
+            setTasks(currentTasks => {
+                const activeIndex = currentTasks.findIndex(t => t.id === activeId);
+                currentTasks[activeIndex].columnId = overId;
+                // This triggers a re-render by creating a new array
+                return arrayMove(currentTasks, activeIndex, activeIndex);
+            });
+        }
+        
+        const isOverATask = over.data.current?.type === 'Task';
 
         // Dropping a Task over another Task (reordering within or between columns)
         if (isActiveATask && isOverATask) {
@@ -256,22 +268,12 @@ export default function AtendimentosPage() {
                 const activeTask = currentTasks[activeIndex];
                 const overTask = currentTasks[overIndex];
 
-                if (activeTask.columnId !== overTask.columnId) {
+                if (activeTask && overTask && activeTask.columnId !== overTask.columnId) {
                     currentTasks[activeIndex].columnId = overTask.columnId;
                     return arrayMove(currentTasks, activeIndex, overIndex);
                 }
                 
                 return arrayMove(currentTasks, activeIndex, overIndex);
-            });
-        }
-
-        // Dropping a Task over a Column
-        if (isActiveATask && isOverAColumn) {
-            setTasks(currentTasks => {
-                const activeIndex = currentTasks.findIndex(t => t.id === activeId);
-                currentTasks[activeIndex].columnId = overId;
-                // This triggers a re-render by creating a new array
-                return arrayMove(currentTasks, activeIndex, activeIndex);
             });
         }
     };
@@ -324,7 +326,7 @@ export default function AtendimentosPage() {
                 sensors={sensors}
                 onDragStart={onDragStart}
                 onDragEnd={onDragEnd}
-                collisionDetection={closestCenter}
+                collisionDetection={rectIntersection} // Estratégia de colisão atualizada
             >
                 <SortableContext items={columns.map(c => c.id)} strategy={rectSortingStrategy}>
                     {columns.map(col => (
@@ -367,4 +369,3 @@ export default function AtendimentosPage() {
     </div>
   );
 }
-
