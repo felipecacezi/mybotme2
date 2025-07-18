@@ -1,17 +1,20 @@
-import { generateFaq } from '@/ai/flows/generate-faq';
 import FaqAccordion from './FaqAccordion';
 
-const productInformation = `
-MyBotMe é uma plataforma de chatbot com inteligência artificial projetada para automatizar o atendimento ao cliente via WhatsApp. 
-Ela atua como uma secretária virtual, capaz de responder perguntas frequentes, agendar compromissos, qualificar leads e fornecer suporte 24 horas por dia, 7 dias por semana. 
-A integração é simples e não requer conhecimento técnico. 
-O objetivo do MyBotMe é otimizar a comunicação, reduzir custos operacionais e melhorar a experiência do cliente, permitindo que as empresas se concentrem em tarefas mais estratégicas. 
-As principais funcionalidades incluem respostas instantâneas, personalização de conversas e a capacidade de lidar com múltiplos atendimentos simultaneamente.
+const staticFaqContent = `
+**O que é o MyBotMe?**
+MyBotMe é uma plataforma de chatbot com inteligência artificial projetada para automatizar o atendimento ao cliente via WhatsApp. Ela atua como uma secretária virtual para o seu negócio.
+
+**Preciso de conhecimento técnico para configurar?**
+Não! A integração é simples e projetada para ser feita em poucos cliques, sem necessidade de conhecimento técnico.
+
+**Como o MyBotMe pode ajudar meu negócio?**
+Ele otimiza a comunicação, responde clientes 24/7, qualifica leads e reduz custos operacionais, permitindo que você foque no crescimento da sua empresa.
+
+**O atendimento é personalizável?**
+Sim, você pode adaptar o tom de voz, as respostas e todo o fluxo de conversa para se alinhar perfeitamente com a identidade da sua marca.
 `;
 
-export default async function FaqSection() {
-  const { faqContent } = await generateFaq({ productInformation });
-
+export default function FaqSection() {
   return (
     <section id="faq" className="w-full py-12 md:py-24 lg:py-32 bg-card">
       <div className="container mx-auto px-4 md:px-6">
@@ -26,7 +29,7 @@ export default async function FaqSection() {
           </div>
         </div>
         <div className="mx-auto grid max-w-5xl items-center gap-6 py-12">
-          <FaqAccordion faqContent={faqContent} />
+          <FaqAccordion faqContent={staticFaqContent} />
         </div>
       </div>
     </section>

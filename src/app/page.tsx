@@ -1,11 +1,10 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import Header from '@/components/landing-page/Header';
 import HeroSection from '@/components/landing-page/HeroSection';
 import FeaturesSection from '@/components/landing-page/FeaturesSection';
 import TestimonialsSection from '@/components/landing-page/TestimonialsSection';
 import FaqSection from '@/components/landing-page/FaqSection';
 import Footer from '@/components/landing-page/Footer';
-import FaqSkeleton from '@/components/landing-page/FaqSkeleton';
 
 export default function Home() {
   return (
@@ -15,9 +14,7 @@ export default function Home() {
         <HeroSection />
         <FeaturesSection />
         <TestimonialsSection />
-        <Suspense fallback={<FaqSkeleton />}>
-          <FaqSection />
-        </Suspense>
+        <FaqSection />
       </main>
       <Footer />
     </div>
