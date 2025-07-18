@@ -31,6 +31,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/reports', label: 'Relatórios', icon: LineChart },
+  { href: '/dashboard/profile', label: 'Perfil', icon: User },
   { href: '/dashboard/settings', label: 'Configurações', icon: Settings },
 ];
 
@@ -40,6 +41,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+
+  const getPageTitle = () => {
+    const currentItem = menuItems.find(item => pathname.startsWith(item.href));
+    return currentItem?.label || 'Dashboard';
+  };
 
   return (
     <SidebarProvider>
@@ -55,7 +61,7 @@ export default function DashboardLayout({
             {menuItems.map((item) => (
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href}>
-                  <SidebarMenuButton isActive={pathname === item.href}>
+                  <SidebarMenuButton isActive={pathname.startsWith(item.href)}>
                     <item.icon />
                     <span>{item.label}</span>
                   </SidebarMenuButton>
@@ -90,13 +96,17 @@ export default function DashboardLayout({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Perfil</span>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/profile">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Perfil</span>
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Configurações</span>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Configurações</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
@@ -113,7 +123,7 @@ export default function DashboardLayout({
         <header className="flex items-center justify-between p-4 border-b">
           <SidebarTrigger />
            <h1 className="text-2xl font-semibold">
-              {menuItems.find(item => item.href === pathname)?.label || 'Dashboard'}
+              {getPageTitle()}
             </h1>
           <div className="w-7 h-7" />
         </header>
