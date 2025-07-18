@@ -34,7 +34,6 @@ export default function Footer() {
           <h4 className="font-bold text-lg text-white">Navegação</h4>
           <ul className="space-y-2">
             <li><Link href="#features" className="hover:text-primary transition-colors" prefetch={false}>Funcionalidades</Link></li>
-            <li><Link href="#testimonials" className="hover:text-primary transition-colors" prefetch={false}>Depoimentos</Link></li>
             <li><Link href="#faq" className="hover:text-primary transition-colors" prefetch={false}>FAQ</Link></li>
           </ul>
         </div>

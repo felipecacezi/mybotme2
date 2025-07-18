@@ -34,9 +34,6 @@ export default function Header() {
           <Link href="#features" className="hover:text-primary transition-colors" prefetch={false}>
             Funcionalidades
           </Link>
-          <Link href="#testimonials" className="hover:text-primary transition-colors" prefetch={false}>
-            Depoimentos
-          </Link>
           <Link href="#faq" className="hover:text-primary transition-colors" prefetch={false}>
             FAQ
           </Link>
