@@ -31,6 +31,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/atendimentos', label: 'Atendimentos', icon: MessageSquare },
+  { href: '/dashboard/chatbot', label: 'Chatbot', icon: Bot },
 ];
 
 export default function DashboardLayout({
@@ -44,6 +45,7 @@ export default function DashboardLayout({
     if (pathname.startsWith('/dashboard/profile')) return 'Perfil';
     if (pathname.startsWith('/dashboard/settings')) return 'Configurações';
     if (pathname.startsWith('/dashboard/atendimentos')) return 'Atendimentos';
+    if (pathname.startsWith('/dashboard/chatbot')) return 'Chatbot';
     const currentItem = menuItems.find(item => item.href === pathname || (item.href !== '/dashboard' && pathname.startsWith(item.href)));
     return currentItem?.label || 'Dashboard';
   };
@@ -128,7 +130,7 @@ export default function DashboardLayout({
             </h1>
           <div className="w-7 h-7" />
         </header>
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
