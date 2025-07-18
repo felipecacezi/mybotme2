@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { maskCPF, maskCNPJ, maskCEP } from "@/lib/masks";
 
 
 const formSchema = z.object({
@@ -74,25 +75,14 @@ export default function CadastroPage() {
 
   const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    const onlyDigits = value.replace(/\D/g, '');
-    let maskedValue = onlyDigits;
-
-    if (documentType === 'cpf') {
-      maskedValue = onlyDigits
-        .slice(0, 11)
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    } else if (documentType === 'cnpj') {
-      maskedValue = onlyDigits
-        .slice(0, 14)
-        .replace(/(\d{2})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1/$2')
-        .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
-    }
-
+    const maskedValue = documentType === 'cpf' ? maskCPF(value) : maskCNPJ(value);
     form.setValue('document', maskedValue, { shouldValidate: true });
+  };
+  
+  const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    const maskedValue = maskCEP(value);
+    form.setValue('address.zip', maskedValue, { shouldValidate: true });
   };
 
 
@@ -250,7 +240,12 @@ export default function CadastroPage() {
                       <FormItem className="md:col-span-1">
                         <FormLabel>CEP</FormLabel>
                         <FormControl>
-                          <Input placeholder="00000-000" {...field} onBlur={handleCepBlur} />
+                          <Input 
+                            placeholder="00000-000" 
+                            {...field} 
+                            onChange={handleCepChange}
+                            onBlur={handleCepBlur} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
