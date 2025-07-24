@@ -135,8 +135,19 @@ export default function CadastroPage() {
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+    
+    if (!webhookUrl) {
+       toast({
+        variant: "destructive",
+        title: "Erro de Configuração",
+        description: "A URL do webhook não está configurada.",
+      });
+      return;
+    }
+
     try {
-      const response = await fetch('http://localhost/n8n/webhook-test/249f5143-8a57-401c-a888-f398485ca797', {
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
