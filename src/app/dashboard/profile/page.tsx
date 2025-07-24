@@ -4,8 +4,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Eye, EyeOff, AlertTriangle } from "lucide-react";
-import React, { useState } from "react";
+import { Eye, EyeOff, AlertTriangle, Loader2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { maskCPF, maskCNPJ, maskCEP } from "@/lib/masks";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const profileFormSchema = z.object({
   email: z.string().email({ message: "Por favor, insira um e-mail válido." }),
@@ -66,26 +67,78 @@ export default function ProfilePage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [showDeleteConfirmPassword, setShowDeleteConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const profileForm = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      email: "shadcn@example.com",
-      documentType: "cnpj",
-      document: "12.345.678/0001-99",
+      email: "",
+      documentType: "cpf",
+      document: "",
       newPassword: "",
       confirmPassword: "",
       address: {
-        zip: "12345-678",
-        street: "Rua Exemplo",
-        number: "123",
-        complement: "Apto 45",
-        neighborhood: "Centro",
-        city: "Cidade Exemplo",
-        state: "EX",
+        zip: "",
+        street: "",
+        number: "",
+        complement: "",
+        neighborhood: "",
+        city: "",
+        state: "",
       }
     },
   });
+
+  useEffect(() => {
+    async function fetchProfileData() {
+        try {
+            const response = await fetch('/api/profile');
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                const profile = result.data;
+                const company = profile.company;
+
+                const documentType = company.document_type || 'cpf';
+                const documentValue = company.document || '';
+
+                profileForm.reset({
+                    email: profile.email || '',
+                    documentType: documentType,
+                    document: documentType === 'cpf' ? maskCPF(documentValue) : maskCNPJ(documentValue),
+                    newPassword: "",
+                    confirmPassword: "",
+                    address: {
+                        zip: company.zip_code ? maskCEP(company.zip_code) : '',
+                        street: company.street || '',
+                        number: company.number || '',
+                        complement: company.complement || '',
+                        neighborhood: company.neighborhood || '',
+                        city: company.city || '',
+                        state: company.state || '',
+                    }
+                });
+            } else {
+                 toast({
+                    variant: "destructive",
+                    title: "Erro ao carregar perfil",
+                    description: result.message || "Não foi possível buscar seus dados.",
+                });
+            }
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Erro de Rede",
+                description: "Não foi possível conectar ao servidor para buscar seus dados.",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+    fetchProfileData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // The empty dependency array ensures this runs once on mount
+
 
   const deleteAccountForm = useForm<z.infer<typeof deleteAccountSchema>>({
     resolver: zodResolver(deleteAccountSchema),
@@ -147,6 +200,33 @@ export default function ProfilePage() {
       description: "Sua conta foi permanentemente excluída.",
     });
   }
+  
+  const ProfileFormSkeleton = () => (
+    <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+         <p className="text-sm font-medium text-muted-foreground pt-4">Alterar Senha (Opcional)</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+        </div>
+        <p className="text-sm font-medium text-muted-foreground pt-4">Endereço da Empresa</p>
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full md:col-span-2" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full md:col-span-2" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+        </div>
+        <Skeleton className="h-10 w-32 !mt-6" />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -156,7 +236,8 @@ export default function ProfilePage() {
           <CardDescription>Atualize suas informações pessoais e de endereço.</CardDescription>
         </CardHeader>
         <CardContent>
-           <Form {...profileForm}>
+           {isLoading ? <ProfileFormSkeleton /> : (
+            <Form {...profileForm}>
             <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
               <FormField
                 control={profileForm.control}
@@ -361,6 +442,7 @@ export default function ProfilePage() {
               <Button type="submit" className="font-bold !mt-6">Salvar Alterações</Button>
             </form>
           </Form>
+           )}
         </CardContent>
       </Card>
 
@@ -455,5 +537,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
