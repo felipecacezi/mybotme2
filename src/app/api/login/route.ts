@@ -27,19 +27,30 @@ export async function POST(request: Request) {
        return NextResponse.json({ success: false, message: 'Credenciais inválidas.' }, { status: 401 });
     }
 
-    const token = result.data.token;
+    const token = result.data?.token;
+    const companyId = result.data?.id_company;
+
     if (!token) {
        return NextResponse.json({ success: false, message: 'Token não recebido.' }, { status: 500 });
     }
+    
+    if (companyId === undefined) {
+        return NextResponse.json({ success: false, message: 'ID da empresa não recebido.' }, { status: 500 });
+    }
 
-    // Set the token in an HttpOnly cookie
-    cookies().set('auth_token', token, {
+
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
-      sameSite: 'strict',
+      sameSite: 'strict' as const,
       maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
+    };
+
+    // Set the token and company ID in HttpOnly cookies
+    cookies().set('auth_token', token, cookieOptions);
+    cookies().set('company_id', companyId, cookieOptions);
+
 
     return NextResponse.json({ success: true });
 
