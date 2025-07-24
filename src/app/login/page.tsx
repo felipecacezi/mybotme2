@@ -39,13 +39,46 @@ export default function LoginPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: "Login realizado com sucesso!",
-      description: "Você será redirecionado em breve.",
-    });
-    router.push("/dashboard");
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const webhookUrl = "http://localhost/n8n/webhook-test/4c4483bb-8014-49b4-a903-10005fb5d0d7";
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha na comunicação com o servidor.');
+      }
+      
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Você será redirecionado em breve.",
+        });
+        // Here you would typically save the result.data.token
+        router.push("/dashboard");
+      } else {
+         toast({
+          variant: "destructive",
+          title: "Falha no Login",
+          description: "E-mail ou senha inválidos. Tente novamente.",
+        });
+      }
+      
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível fazer login. Verifique sua conexão ou tente mais tarde.",
+      });
+    }
   }
 
   return (
