@@ -134,12 +134,33 @@ export default function CadastroPage() {
   };
 
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: "Cadastro realizado com sucesso!",
-      description: "Verifique seu e-mail para confirmar sua conta.",
-    });
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const response = await fetch('http://localhost/n8n/webhook-test/249f5143-8a57-401c-a888-f398485ca797', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha ao enviar o formulário.');
+      }
+
+      toast({
+        title: "Cadastro realizado com sucesso!",
+        description: "Seus dados foram enviados.",
+      });
+      form.reset();
+      
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro no Cadastro",
+        description: "Não foi possível completar seu cadastro. Tente novamente.",
+      });
+    }
   }
 
   return (
