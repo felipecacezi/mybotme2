@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bot, Eye, EyeOff } from "lucide-react";
 import React, { useState } from "react";
 
@@ -57,6 +58,7 @@ const formSchema = z.object({
 
 export default function CadastroPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -152,9 +154,9 @@ export default function CadastroPage() {
 
       toast({
         title: "Cadastro realizado com sucesso!",
-        description: "Seus dados foram enviados.",
+        description: "Você será redirecionado para a página de login.",
       });
-      form.reset();
+      router.push("/login");
       
     } catch (error: any) {
       toast({
@@ -425,5 +427,3 @@ export default function CadastroPage() {
     </div>
   );
 }
-
-    
