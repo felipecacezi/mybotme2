@@ -1,5 +1,6 @@
 
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import type { CookieSerializeOptions } from 'cookie';
 
 export async function POST(request: Request) {
@@ -34,8 +35,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: 'ID da empresa não recebido.' }, { status: 500 });
     }
 
-    const response = NextResponse.json({ success: true });
-
     const cookieOptions: Partial<CookieSerializeOptions> = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -44,11 +43,12 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 * 7, // 1 week
     };
 
-    // Set the token and company ID in HttpOnly cookies on the response
-    response.cookies.set('auth_token', token, cookieOptions);
-    response.cookies.set('company_id', String(companyId), cookieOptions);
+    // Use a função cookies() de next/headers para garantir a configuração HttpOnly
+    const cookieStore = cookies();
+    cookieStore.set('auth_token', token, cookieOptions);
+    cookieStore.set('company_id', String(companyId), cookieOptions);
 
-    return response;
+    return NextResponse.json({ success: true });
 
   } catch (error) {
     console.error('Login error:', error);
