@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: 'ID da empresa não recebido.' }, { status: 500 });
     }
 
-
+    const cookieStore = cookies();
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -44,8 +44,8 @@ export async function POST(request: Request) {
     };
 
     // Set the token and company ID in HttpOnly cookies
-    cookies().set('auth_token', token, cookieOptions);
-    cookies().set('company_id', companyId, cookieOptions);
+    cookieStore.set('auth_token', token, cookieOptions);
+    cookieStore.set('company_id', String(companyId), cookieOptions);
 
 
     return NextResponse.json({ success: true });
