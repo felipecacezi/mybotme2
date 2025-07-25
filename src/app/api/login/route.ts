@@ -11,14 +11,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'E-mail e senha são obrigatórios.' }, { status: 400 });
     }
 
-    const webhookUrl = "http://localhost/n8n/webhook-test/4c4483bb-8014-49b4-a903-10005fb5d0d7";
+    const webhookUrl = `http://n8n:5678/webhook/4c4483bb-8014-49b4-a903-10005fb5d0d7?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
 
     const webhookResponse = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
+      method: 'GET'
     });
 
     const result = await webhookResponse.json();

@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Campos obrigatórios ausentes.' }, { status: 400 });
     }
 
-    const webhookUrl = "http://localhost/n8n/webhook-test/249f5143-8a57-401c-a888-f398485ca797";
+    const webhookUrl = "http://n8n:5678/webhook/249f5143-8a57-401c-a888-f398485ca797";
 
     const webhookResponse = await fetch(webhookUrl, {
       method: 'POST',
