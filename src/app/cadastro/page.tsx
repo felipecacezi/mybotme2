@@ -135,19 +135,19 @@ export default function CadastroPage() {
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const webhookUrl = "http://localhost/n8n/webhook-test/249f5143-8a57-401c-a888-f398485ca797";
-    
     try {
-      const response = await fetch(webhookUrl, {
+      const response = await fetch('/api/cadastro', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(values),
       });
+      
+      const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error('Falha ao enviar o formulário.');
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Falha ao enviar o formulário.');
       }
 
       toast({
@@ -156,11 +156,11 @@ export default function CadastroPage() {
       });
       form.reset();
       
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erro no Cadastro",
-        description: "Não foi possível completar seu cadastro. Tente novamente.",
+        description: error.message || "Não foi possível completar seu cadastro. Tente novamente.",
       });
     }
   }
