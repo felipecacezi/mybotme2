@@ -4,13 +4,13 @@ import { cookies } from 'next/headers';
 
 export async function GET(request: Request) {
   const cookieStore = cookies();
-  const token = cookieStore.get('auth_token');
+  const token = (await cookieStore).get('auth_token');
 
   if (!token) {
     return NextResponse.json({ success: false, message: 'Não autorizado' }, { status: 401 });
   }
 
-  const webhookUrl = "http://localhost:5678/n8n/webhook/41250260-1ec9-47de-bc11-31fb3a6f56ae";
+  const webhookUrl = "http://n8n:5678/webhook/41250260-1ec9-47de-bc11-31fb3a6f56ae";
 
   try {
     const webhookResponse = await fetch(webhookUrl, {
