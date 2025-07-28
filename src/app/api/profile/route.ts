@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, message: 'Não autorizado' }, { status: 401 });
   }
 
-  const webhookUrl = "http://localhost/n8n/webhook-test/41250260-1ec9-47de-bc11-31fb3a6f56ae";
+  const webhookUrl = "http://localhost:5678/n8n/webhook/41250260-1ec9-47de-bc11-31fb3a6f56ae";
 
   try {
     const webhookResponse = await fetch(webhookUrl, {
