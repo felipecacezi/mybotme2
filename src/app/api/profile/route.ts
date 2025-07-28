@@ -4,13 +4,18 @@ import { cookies } from 'next/headers';
 
 export async function GET(request: Request) {
   const cookieStore = cookies();
-  const token = (await cookieStore).get('auth_token');
+  const token = cookieStore.get('auth_token');
+  const userId = cookieStore.get('id_user');
 
   if (!token) {
-    return NextResponse.json({ success: false, message: 'Não autorizado' }, { status: 401 });
+    return NextResponse.json({ success: false, message: 'Não autorizado: Token não encontrado.' }, { status: 401 });
+  }
+  
+  if (!userId) {
+    return NextResponse.json({ success: false, message: 'Não autorizado: ID do usuário não encontrado.' }, { status: 401 });
   }
 
-  const webhookUrl = "http://n8n:5678/webhook/41250260-1ec9-47de-bc11-31fb3a6f56ae";
+  const webhookUrl = `http://n8n:5678/webhook/41250260-1ec9-47de-bc11-31fb3a6f56ae?user=${userId.value}`;
 
   try {
     const webhookResponse = await fetch(webhookUrl, {
