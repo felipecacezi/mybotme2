@@ -33,6 +33,20 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: false, message: 'Falha ao buscar dados do perfil.' }, { status: webhookResponse.status });
     }
 
+    // Refresh token logic via header
+    const newAuthToken = webhookResponse.headers.get('X-Refreshed-Token');
+    if (newAuthToken) {
+        const cookieOptions: Partial<CookieSerializeOptions> = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            sameSite: 'strict',
+            maxAge: 60 * 60 * 24 * 7, // 1 week
+        };
+
+        cookieStore.set('auth_token', newAuthToken, cookieOptions);
+    }
+    
     const responseBody = await webhookResponse.text();
     if (!responseBody) {
         return NextResponse.json({ success: false, message: 'Dados do perfil não encontrados.' }, { status: 404 });
@@ -46,23 +60,7 @@ export async function GET(request: Request) {
     if (!userProfile) {
          return NextResponse.json({ success: false, message: 'Dados do perfil não encontrados.' }, { status: 404 });
     }
-
-    // Refresh token logic
-    if (userProfile.token) {
-        const newAuthToken = userProfile.token;
-        
-        const cookieOptions: Partial<CookieSerializeOptions> = {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            path: '/',
-            sameSite: 'strict',
-            maxAge: 60 * 60 * 24 * 7, // 1 week
-        };
-
-        cookieStore.set('auth_token', newAuthToken, cookieOptions);
-    }
-
-
+    
     return NextResponse.json({ success: true, data: userProfile });
 
   } catch (error) {
