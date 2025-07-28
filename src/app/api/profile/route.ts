@@ -32,7 +32,12 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: false, message: 'Falha ao buscar dados do perfil.' }, { status: webhookResponse.status });
     }
 
-    const data = await webhookResponse.json();
+    const responseBody = await webhookResponse.text();
+    if (!responseBody) {
+        return NextResponse.json({ success: false, message: 'Dados do perfil não encontrados.' }, { status: 404 });
+    }
+    
+    const data = JSON.parse(responseBody);
     
     // The API returns an array, we'll take the first element
     const userProfile = data[0];
