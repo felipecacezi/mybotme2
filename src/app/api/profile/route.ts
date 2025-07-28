@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import type { CookieSerializeOptions } from 'cookie';
 
 export async function GET(request: Request) {
   const cookieStore = cookies();
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, message: 'Não autorizado: ID do usuário não encontrado.' }, { status: 401 });
   }
 
-  const webhookUrl = `http://n8n:5678/webhook/41250260-1ec9-47de-bc11-31fb3a6f56ae?user=${userId.value}`;
+  const webhookUrl = `http://localhost:5678/n8n/webhook/41250260-1ec9-47de-bc11-31fb3a6f56ae?user=${userId.value}`;
 
   try {
     const webhookResponse = await fetch(webhookUrl, {
@@ -45,6 +46,22 @@ export async function GET(request: Request) {
     if (!userProfile) {
          return NextResponse.json({ success: false, message: 'Dados do perfil não encontrados.' }, { status: 404 });
     }
+
+    // Refresh token logic
+    if (userProfile.token) {
+        const newAuthToken = userProfile.token;
+        
+        const cookieOptions: Partial<CookieSerializeOptions> = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            sameSite: 'strict',
+            maxAge: 60 * 60 * 24 * 7, // 1 week
+        };
+
+        cookieStore.set('auth_token', newAuthToken, cookieOptions);
+    }
+
 
     return NextResponse.json({ success: true, data: userProfile });
 
