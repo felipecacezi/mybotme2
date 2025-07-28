@@ -5,8 +5,8 @@ import type { CookieSerializeOptions } from 'cookie';
 
 export async function GET(request: Request) {
   const cookieStore = cookies();
-  const token = cookieStore.get('auth_token');
-  const userId = cookieStore.get('id_user');
+  const token = (await cookieStore).get('auth_token');
+  const userId = (await cookieStore).get('id_user');
 
   if (!token) {
     return NextResponse.json({ success: false, message: 'Não autorizado: Token não encontrado.' }, { status: 401 });

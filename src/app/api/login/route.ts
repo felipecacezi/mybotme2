@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     const token = result.data?.token;
     const companyId = result.data?.id_company;
     const userId = result.data?.id;
+    
 
     if (!token) {
        return NextResponse.json({ success: false, message: 'Token não recebido.' }, { status: 500 });
@@ -50,10 +51,9 @@ export async function POST(request: Request) {
 
     // Use a função cookies() de next/headers para garantir a configuração HttpOnly
     const cookieStore = cookies();
-    cookieStore.set('auth_token', token, cookieOptions);
-    cookieStore.set('company_id', String(companyId), cookieOptions);
-    cookieStore.set('id_user', String(userId), cookieOptions);
-
+    (await cookieStore).set('auth_token', token, cookieOptions);
+    (await cookieStore).set('company_id', String(companyId), cookieOptions);
+    (await cookieStore).set('id_user', String(userId), cookieOptions);
 
     return NextResponse.json({ success: true });
 
