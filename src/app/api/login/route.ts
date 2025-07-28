@@ -26,6 +26,7 @@ export async function POST(request: Request) {
 
     const token = result.data?.token;
     const companyId = result.data?.id_company;
+    const userId = result.data?.id;
 
     if (!token) {
        return NextResponse.json({ success: false, message: 'Token não recebido.' }, { status: 500 });
@@ -33,6 +34,10 @@ export async function POST(request: Request) {
     
     if (companyId === undefined) {
         return NextResponse.json({ success: false, message: 'ID da empresa não recebido.' }, { status: 500 });
+    }
+    
+    if (userId === undefined) {
+        return NextResponse.json({ success: false, message: 'ID do usuário não recebido.' }, { status: 500 });
     }
 
     const cookieOptions: Partial<CookieSerializeOptions> = {
@@ -47,6 +52,8 @@ export async function POST(request: Request) {
     const cookieStore = cookies();
     cookieStore.set('auth_token', token, cookieOptions);
     cookieStore.set('company_id', String(companyId), cookieOptions);
+    cookieStore.set('id_user', String(userId), cookieOptions);
+
 
     return NextResponse.json({ success: true });
 
