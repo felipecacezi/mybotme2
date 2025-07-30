@@ -68,3 +68,56 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, message: 'Ocorreu um erro no servidor.' }, { status: 500 });
   }
 }
+
+
+export async function PATCH(request: Request) {
+    const cookieStore = cookies();
+    const token = (await cookieStore).get('auth_token');
+    const userId = (await cookieStore).get('id_user');
+
+    if (!token || !userId) {
+        return NextResponse.json({ success: false, message: 'Não autorizado.' }, { status: 401 });
+    }
+
+    try {
+        const body = await request.json();
+
+        // N8N webhook URL for updating profile
+        const webhookUrl = "http://n8n:5678/webhook/857f9f2b-dad9-4e98-9292-c62198d549d7";
+
+        const webhookResponse = await fetch(webhookUrl, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token.value}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ...body, id_user: userId.value }), // Forwarding body and ensuring user id is present
+        });
+
+        // Refresh token logic via header
+        const newAuthToken = webhookResponse.headers.get('X-Refreshed-Token');
+        if (newAuthToken) {
+            const cookieOptions: Partial<CookieSerializeOptions> = {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                path: '/',
+                sameSite: 'strict',
+                maxAge: 60 * 60 * 24 * 7, // 1 week
+            };
+            (await cookieStore).set('auth_token', newAuthToken, cookieOptions);
+        }
+
+        if (!webhookResponse.ok) {
+            const errorData = await webhookResponse.json().catch(() => ({ message: 'Falha ao atualizar o perfil. O serviço de destino não respondeu corretamente.' }));
+            return NextResponse.json({ success: false, message: errorData.message }, { status: webhookResponse.status });
+        }
+        
+        const result = await webhookResponse.json();
+
+        return NextResponse.json({ success: true, data: result });
+
+    } catch (error) {
+        console.error('Profile update error:', error);
+        return NextResponse.json({ success: false, message: 'Ocorreu um erro no servidor ao atualizar o perfil.' }, { status: 500 });
+    }
+}

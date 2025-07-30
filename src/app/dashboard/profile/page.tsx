@@ -68,6 +68,7 @@ export default function ProfilePage() {
   const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [showDeleteConfirmPassword, setShowDeleteConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const profileForm = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
@@ -137,7 +138,7 @@ export default function ProfilePage() {
     }
     fetchProfileData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // The empty dependency array ensures this runs once on mount
+  }, []); 
 
 
   const deleteAccountForm = useForm<z.infer<typeof deleteAccountSchema>>({
@@ -184,12 +185,37 @@ export default function ProfilePage() {
     }
   };
 
-  function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
-    console.log(values);
-    toast({
-      title: "Perfil atualizado!",
-      description: "Seus dados foram salvos com sucesso.",
-    });
+  async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
+    setIsUpdating(true);
+    try {
+        const response = await fetch('/api/profile', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(values),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            toast({
+                title: "Perfil atualizado!",
+                description: "Seus dados foram salvos com sucesso.",
+            });
+            // Reset password fields after successful submission
+            profileForm.setValue('newPassword', '');
+            profileForm.setValue('confirmPassword', '');
+        } else {
+            throw new Error(result.message || "Não foi possível atualizar o perfil.");
+        }
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Erro na atualização",
+            description: error.message,
+        });
+    } finally {
+        setIsUpdating(false);
+    }
   }
 
   function onDeleteAccountSubmit(values: z.infer<typeof deleteAccountSchema>) {
@@ -439,7 +465,10 @@ export default function ProfilePage() {
                   />
                 </div>
 
-              <Button type="submit" className="font-bold !mt-6">Salvar Alterações</Button>
+              <Button type="submit" className="font-bold !mt-6" disabled={isUpdating}>
+                {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar Alterações
+              </Button>
             </form>
           </Form>
            )}
