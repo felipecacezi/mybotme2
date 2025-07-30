@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, message: 'Não autorizado: ID do usuário não encontrado.' }, { status: 401 });
   }
 
-  const webhookUrl = `http://localhost:5678/n8n/webhook/41250260-1ec9-47de-bc11-31fb3a6f56ae?user=${userId.value}`;
+  const webhookUrl = `http://n8n:5678/webhook/41250260-1ec9-47de-bc11-31fb3a6f56ae?user=${userId.value}`;
 
   try {
     const webhookResponse = await fetch(webhookUrl, {
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
             maxAge: 60 * 60 * 24 * 7, // 1 week
         };
 
-        cookieStore.set('auth_token', newAuthToken, cookieOptions);
+        (await cookieStore).set('auth_token', newAuthToken, cookieOptions);
     }
     
     const responseBody = await webhookResponse.text();
