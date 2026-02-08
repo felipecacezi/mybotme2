@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bot, Eye, EyeOff } from "lucide-react";
 import React, { useState } from "react";
 
@@ -57,6 +58,7 @@ const formSchema = z.object({
 
 export default function CadastroPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -134,12 +136,35 @@ export default function CadastroPage() {
   };
 
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: "Cadastro realizado com sucesso!",
-      description: "Verifique seu e-mail para confirmar sua conta.",
-    });
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const response = await fetch('/api/cadastro', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+      
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Falha ao enviar o formulário.');
+      }
+
+      toast({
+        title: "Cadastro realizado com sucesso!",
+        description: "Você será redirecionado para a página de login.",
+      });
+      router.push("/login");
+      
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro no Cadastro",
+        description: error.message || "Não foi possível completar seu cadastro. Tente novamente.",
+      });
+    }
   }
 
   return (

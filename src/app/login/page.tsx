@@ -39,13 +39,39 @@ export default function LoginPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: "Login realizado com sucesso!",
-      description: "Você será redirecionado em breve.",
-    });
-    router.push("/dashboard");
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+      
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Você será redirecionado em breve.",
+        });
+        router.push("/dashboard");
+      } else {
+         toast({
+          variant: "destructive",
+          title: "Falha no Login",
+          description: result.message || "E-mail ou senha inválidos. Tente novamente.",
+        });
+      }
+      
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível fazer login. Verifique sua conexão ou tente mais tarde.",
+      });
+    }
   }
 
   return (

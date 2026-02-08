@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   Bot, 
   LayoutDashboard, 
@@ -27,6 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useToast } from "@/hooks/use-toast";
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -40,6 +41,23 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/logout', { method: 'POST' });
+      if (response.ok) {
+        toast({ title: 'Logout realizado com sucesso!' });
+        router.push('/login');
+      } else {
+        throw new Error('Falha ao fazer logout.');
+      }
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível fazer logout.' });
+    }
+  };
+
 
   const getPageTitle = () => {
     if (pathname.startsWith('/dashboard/profile')) return 'Perfil';
@@ -113,11 +131,9 @@ export default function DashboardLayout({
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                 <Link href="/login" className="flex items-center w-full">
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sair</span>
-                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
